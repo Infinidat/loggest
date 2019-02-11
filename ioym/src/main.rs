@@ -1,15 +1,16 @@
 use byteorder::{ReadBytesExt, LE};
 use chrono::prelude::*;
-use clap::{App, Arg};
-use failure_derive::Fail;
+use failure::Fail;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::prelude::*;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::io::{self, BufReader};
+use std::os::unix::ffi::OsStrExt;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
+use structopt::StructOpt;
 
 const EXT: &str = "ioym";
 
@@ -19,6 +20,9 @@ lazy_static! {
 
 #[derive(Fail, Debug)]
 enum Error {
+    #[fail(display = "I/O error: {}", _0)]
+    Io(#[cause] io::Error),
+
     #[fail(display = "Unsupported file type for \"{}\"", _0)]
     UnsupportedFileType(String),
 
@@ -28,6 +32,14 @@ enum Error {
     #[fail(display = "Outputting to standard output is not supported with multiple inputs")]
     StdoutForbidsMultipleInputs,
 }
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::Io(error)
+    }
+}
+
+type IoymResult<T> = Result<T, Error>;
 
 #[derive(Clone, Copy)]
 enum Output {
@@ -41,7 +53,7 @@ struct Ioym<R: BufRead> {
 }
 
 impl<R: Read> Ioym<BufReader<R>> {
-    fn with_reader(r: R) -> Result<Self, failure::Error> {
+    fn with_reader(r: R) -> IoymResult<Self> {
         Ok(Self {
             input: BufReader::new(zstd::Decoder::new(r)?),
             offset: None,
@@ -51,7 +63,7 @@ impl<R: Read> Ioym<BufReader<R>> {
 
 #[cfg(test)]
 impl<R: BufRead> Ioym<R> {
-    fn with_buf_reader(r: R) -> Result<Self, failure::Error> {
+    fn with_buf_reader(r: R) -> IoymResult<Self> {
         Ok(Self {
             input: BufReader::new(zstd::Decoder::with_buffer(r)?),
             offset: None,
@@ -64,7 +76,7 @@ impl<R: BufRead> Ioym<R> {
         self.offset = Some(offset);
     }
 
-    fn decode<W: Write>(&mut self, output: &mut W) -> Result<(), failure::Error> {
+    fn decode<W: Write>(&mut self, output: &mut W) -> IoymResult<()> {
         let mut output = std::io::BufWriter::with_capacity(
             zstd::Decoder::<BufReader<fs::File>>::recommended_output_size(),
             output,
@@ -98,7 +110,7 @@ impl<R: BufRead> Ioym<R> {
 /// Read all bytes into `w` until the delimiter `byte` or EOF is reached.
 ///
 /// Copied from [`BufRead::read_until`] and modified to write to `Write` instead of `Vec<u8>`.
-fn copy_until<R, W>(r: &mut R, w: &mut W, delim: u8) -> Result<usize, failure::Error>
+fn copy_until<R, W>(r: &mut R, w: &mut W, delim: u8) -> IoymResult<usize>
 where
     R: BufRead,
     W: Write,
@@ -130,31 +142,26 @@ where
     }
 }
 
-fn read_time<R: BufRead>(
-    input: &mut R,
-    offset: chrono::FixedOffset,
-) -> Result<chrono::DateTime<FixedOffset>, std::io::Error> {
+fn read_time<R: BufRead>(input: &mut R, offset: chrono::FixedOffset) -> io::Result<chrono::DateTime<FixedOffset>> {
     let duration = Duration::from_millis(input.read_u64::<LE>()?);
     Ok(offset.timestamp(duration.as_secs() as i64, duration.subsec_nanos()))
 }
 
-fn open_ioym_file(filename: &str) -> Result<fs::File, failure::Error> {
-    let path = Path::new(filename);
-
-    if !path.exists() {
-        Err(Error::FileNotFound(filename.to_string()))?;
+fn open_ioym_file(filename: &Path) -> IoymResult<fs::File> {
+    if !filename.exists() {
+        return Err(Error::FileNotFound(filename.to_string_lossy().to_string()));
     }
 
-    match path.extension().and_then(OsStr::to_str) {
+    match filename.extension().and_then(OsStr::to_str) {
         Some(EXT) => (),
-        _ => Err(Error::UnsupportedFileType(filename.to_string()))?,
+        _ => return Err(Error::UnsupportedFileType(filename.to_string_lossy().to_string())),
     };
 
     Ok(fs::File::open(filename)?)
 }
 
-fn handle_file(filename: &str, output: Output, is_utc: bool) -> Result<(), failure::Error> {
-    let mut ioym = Ioym::with_reader(open_ioym_file(filename)?)?;
+fn handle_file(filename: &OsStr, output: Output, is_utc: bool) -> IoymResult<()> {
+    let mut ioym = Ioym::with_reader(open_ioym_file(Path::new(filename))?)?;
 
     if is_utc {
         ioym.set_offset(Utc.fix());
@@ -166,7 +173,7 @@ fn handle_file(filename: &str, output: Output, is_utc: bool) -> Result<(), failu
             ioym.decode(&mut stdout.lock())?;
         }
         Output::File => {
-            let output_file = &filename[..filename.len() - EXT.len() - 1];
+            let output_file = OsStr::from_bytes(&filename.as_bytes()[..filename.len() - EXT.len() - 1]);
             ioym.decode(&mut fs::OpenOptions::new().write(true).create_new(true).open(output_file)?)?;
 
             let metadata = fs::metadata(filename)?;
@@ -183,37 +190,38 @@ fn handle_file(filename: &str, output: Output, is_utc: bool) -> Result<(), failu
     Ok(())
 }
 
-fn run() -> Result<(), failure::Error> {
-    let matches = App::new("ioym")
-        .version(option_env!("VERSION").unwrap_or("dev"))
-        .about("Extracts and decodes host-io log files")
-        .arg(
-            Arg::with_name("stdout")
-                .short("c")
-                .long("stdout")
-                .help("Output to standard output (only one file allowed)"),
-        )
-        .arg(
-            Arg::with_name("utc")
-                .short("u")
-                .long("utc")
-                .help("Use UTC instead of local timezone"),
-        )
-        .arg(Arg::with_name("file").required(true).multiple(true))
-        .get_matches();
+#[derive(Debug, StructOpt)]
+#[structopt(name = "ioym")]
+/// Extracts and decodes loggest log files
+struct Opt {
+    #[structopt(long, short = "c")]
+    /// Output to standard output (only one file allowed)
+    stdout: bool,
 
-    let is_stdout = matches.is_present("stdout");
-    let is_utc = matches.is_present("utc");
-    let filenames = matches.values_of("file").unwrap();
+    #[structopt(long, short)]
+    /// Use UTC instead of local timezone
+    utc: bool,
 
-    if is_stdout && filenames.len() > 1 {
-        Err(Error::StdoutForbidsMultipleInputs)?;
+    #[structopt(parse(from_os_str), raw(required = "true"))]
+    files: Vec<PathBuf>,
+}
+
+fn run() -> IoymResult<()> {
+    let opt = Opt::from_args();
+
+    if opt.stdout && opt.files.len() > 1 {
+        return Err(Error::StdoutForbidsMultipleInputs);
     }
 
-    filenames
-        .collect::<Vec<_>>()
+    opt.files
         .par_iter()
-        .map(|filename| handle_file(filename, if is_stdout { Output::Stdout } else { Output::File }, is_utc))
+        .map(|filename| {
+            handle_file(
+                filename.as_os_str(),
+                if opt.stdout { Output::Stdout } else { Output::File },
+                opt.utc,
+            )
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(())

@@ -72,8 +72,7 @@ pub fn init<P: Into<PathBuf>>(level: LevelFilter, base_filename: P) -> Result<()
 
 fn init_fifo<P: AsRef<Path>>(filename: P) -> io::Result<File> {
     let filename = filename.as_ref();
-    nix::unistd::mkfifo(filename, nix::sys::stat::Mode::from_bits(0o644).unwrap())
-        .map_err(nix_error_to_io)?;
+    nix::unistd::mkfifo(filename, nix::sys::stat::Mode::from_bits(0o644).unwrap()).map_err(nix_error_to_io)?;
     OpenOptions::new().write(true).open(filename)
 }
 
@@ -106,13 +105,7 @@ impl Log for Loggest {
                 let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
                 let now = now.as_secs() * 1000 + u64::from(now.subsec_millis());
                 file.write_all(&now.to_le_bytes())?;
-                write!(
-                    file,
-                    "[{}] {} -- {}\n",
-                    record.level(),
-                    record.target(),
-                    record.args()
-                )?;
+                write!(file, "[{}] {} -- {}\n", record.level(), record.target(), record.args())?;
                 Ok(())
             })
             .ok();
