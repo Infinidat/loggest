@@ -1,0 +1,64 @@
+2018-06-07 13:12:16.413 Running command 0: {node_id: 4, command: "init", num: 0}
+2018-06-07 13:12:16.413 Starting up node 4, version: 116.1.0.1.gf8afb32.1528108091
+2018-06-07 13:12:16.413 Command 0 returned: {num: 0, type: "response", version: "116.1.0.1.gf8afb32.1528108091", port: 52370, code: "ok", pid: 29535}
+2018-06-07 13:12:16.415 Running command 1: {nodes: ["ip_address": "172.16.72.95", "port": 56377, "ip_address": "172.16.72.95", "port": 40474], command: "connect_to_nodes", num: 1}
+2018-06-07 13:12:16.415 Remote node 0 just announced
+2018-06-07 13:12:16.415 Remote node 1 just announced
+2018-06-07 13:12:16.415 Command 1 returned: {num: 1, code: "ok", type: "response"}
+2018-06-07 13:12:16.418 Running command 2: {data: "payload_enabled": true, "writer": "gray_area_start": 0, "taskset_store": [], "ordinal": 0, "retry_tasks": [], "journal": "cyclers": ["items": [], "ordinal": 0, "items": ["taskset_id": [00000000-0000-0000-0000-000000000000, 0], "start_tasknum": 0], "ordinal": -1], "pending_tasks": [], "active_tasks": [], "next_taskset_num": 2, "data_id": aae5a1c7-c127-4189-94e5-c6769e4ddb2c, "next_job_num": 2, "version": 10, "canvas_type": "zero_content", command: "load_data", num: 2}
+2018-06-07 13:12:16.418 Storing taskset 00000000-0000-0000-0000-000000000000:0
+2018-06-07 13:12:16.418 Storing taskset 00000000-0000-0000-0000-000000000000:1
+2018-06-07 13:12:16.418 Storing taskset 00000000-0000-0000-0000-000000000000:0
+2018-06-07 13:12:16.418 Storing taskset 00000000-0000-0000-0000-000000000000:1
+2018-06-07 13:12:16.418 Storing taskset 00000000-0000-0000-0000-000000000000:0
+2018-06-07 13:12:16.418 Storing taskset 00000000-0000-0000-0000-000000000000:1
+2018-06-07 13:12:16.418 Journal after load
+2018-06-07 13:12:16.418 Cycler at ordinal 0
+2018-06-07 13:12:16.418 Cycler at ordinal -1
+2018-06-07 13:12:16.418   taskset_id=00000000-0000-0000-0000-000000000000:0 tasknum=0
+2018-06-07 13:12:16.418 Loaded data aae5a1c7-c127-4189-94e5-c6769e4ddb2c
+2018-06-07 13:12:16.418 Command 2 returned: {num: 2, code: "ok", type: "response"}
+2018-06-07 13:12:16.421 Running command 3: {job: "endpoints": [["172.16.72.95", 1, "58:0:0:1"], ["172.16.72.95", 1, "61:0:0:1"], ["172.16.72.95", 1, "62:0:0:1"], ["172.16.72.95", 1, "63:0:0:1"], ["172.16.72.95", 1, "59:0:0:1"], ["172.16.72.95", 1, "33:0:4:1"], ["172.16.72.95", 1, "60:0:0:1"], ["172.16.72.95", 1, "33:0:3:1"], ["172.16.72.95", 1, "33:0:5:1"]], "time_limit": null, "completion_results": ["SUCCESS"], "stop_results": [], "retry_results": ["LUN_INVENTORY_CHANGED", "PORT_STATE_CHANGED", "CAPACITY_CHANGED", "INQUIRY_DATA_CHANGED", "POWER_ON_OCCURRED", "SCSI_BUS_RESET_UA"], "tasksets": ["interval": "range": [0, 1953125], "offset": 0, "leap": 1, "io_size": 1, "task_type": "ignoring_read"], "transfer_limit": 1, "params": , command: "run_job", num: 3}
+2018-06-07 13:12:16.421 Adding aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2 at orginal 0
+2018-06-07 13:12:16.421 Optimal ordinal for change including aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2 at ordinal=0 is 0
+2018-06-07 13:12:16.421 Journal after addition
+2018-06-07 13:12:16.421 Cycler at ordinal 0
+2018-06-07 13:12:16.421   taskset_id=aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2 tasknum=0
+2018-06-07 13:12:16.421 Storing taskset aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2
+2018-06-07 13:12:16.421 Command 3 returned: {num: 3, type: "response", code: "ok", job_id: [aae5a1c7-c127-4189-94e5-c6769e4ddb2c, 2]}
+2018-06-07 13:12:16.421 Modified queue slots of <SG: 1::61:0:0:1> (1 jobs) by 64 to 64
+2018-06-07 13:12:16.421 Modified queue slots of <SG: 1::63:0:0:1> (1 jobs) by 64 to 64
+2018-06-07 13:12:16.421 Modified queue slots of <SG: 1::33:0:4:1> (1 jobs) by 128 to 128
+2018-06-07 13:12:16.421 Modified queue slots of <SG: 1::33:0:3:1> (1 jobs) by 128 to 128
+2018-06-07 13:12:16.423 Stopping Job aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2
+2018-06-07 13:12:16.423 Removing aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2 at ordinal 1
+2018-06-07 13:12:16.423 Optimal ordinal for change including aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2 at ordinal=1 is 1
+2018-06-07 13:12:16.423 Journal after removal
+2018-06-07 13:12:16.423 Cycler at ordinal 1
+2018-06-07 13:12:16.423 Cycler at ordinal 0
+2018-06-07 13:12:16.423   taskset_id=aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2 tasknum=0
+2018-06-07 13:12:16.423 Issuing task [aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2:0:0] (Blind Read) to endpoint <SG: 1::61:0:0:1>
+2018-06-07 13:12:16.423 Modified queue slots of <SG: 0::58:0:0:1> (1 jobs) by 64 to 64
+2018-06-07 13:12:16.423 Modified queue slots of <SG: 0::62:0:0:1> (1 jobs) by 64 to 64
+2018-06-07 13:12:16.423 Modified queue slots of <SG: 0::59:0:0:1> (1 jobs) by 64 to 64
+2018-06-07 13:12:16.423 Modified queue slots of <SG: 0::60:0:0:1> (1 jobs) by 64 to 64
+2018-06-07 13:12:16.423 Modified queue slots of <SG: 0::33:0:5:1> (1 jobs) by 128 to 128
+2018-06-07 13:12:16.423 Task [aae5a1c7-c127-4189-94e5-c6769e4ddb2c:2:0:0] (Blind Read) from <SG: 1::61:0:0:1> finished with result SUCCESS
+2018-06-07 13:12:16.423 Event dispatched '{type: "event", job_id: [aae5a1c7-c127-4189-94e5-c6769e4ddb2c, 2], code: "job_finished", stats: "max_transport_time": 0, "end": 1528377136423806387, "tasks": 1, "total_transport_time": 0, "retried_tasks": 0, "start": 1528377136421806328, "blocks": 1, "min_transport_time": 0, data_id: aae5a1c7-c127-4189-94e5-c6769e4ddb2c}'
+2018-06-07 13:12:16.423 Modified queue slots of <SG: 0::58:0:0:1> (0 jobs) by -64 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 0::62:0:0:1> (0 jobs) by -64 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 0::59:0:0:1> (0 jobs) by -64 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 0::60:0:0:1> (0 jobs) by -64 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 0::33:0:5:1> (0 jobs) by -128 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 1::61:0:0:1> (0 jobs) by -64 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 1::63:0:0:1> (0 jobs) by -64 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 1::33:0:4:1> (0 jobs) by -128 to 0
+2018-06-07 13:12:16.424 Modified queue slots of <SG: 1::33:0:3:1> (0 jobs) by -128 to 0
+2018-06-07 13:12:16.424 Running command 4: {num: 4, command: "get_stats"}
+2018-06-07 13:12:16.424 Command 4 returned: {type: "response", code: "ok", num: 4, stats: "writer": "max_transport_time": 0, "end": 1528377136424806417, "tasks": 0, "total_transport_time": 0, "retried_tasks": 0, "start": 1528377136418806240, "blocks": 0, "min_transport_time": 0, "other": "max_transport_time": 0, "end": 1528377136424806417, "tasks": 0, "total_transport_time": 0, "retried_tasks": 0, "start": 1528377136418806240, "blocks": 0, "min_transport_time": 0, "reader": "max_transport_time": 0, "end": 1528377136424806417, "tasks": 1, "total_transport_time": 0, "retried_tasks": 0, "start": 1528377136418806240, "blocks": 1, "min_transport_time": 0}
+2018-06-07 13:12:16.487 Running command 5: {num: 5, command: "unload_data"}
+2018-06-07 13:12:16.487 Command 5 returned: {num: 5, type: "response", code: "ok", data: "payload_enabled": true, "writer": "gray_area_start": 0, "taskset_store": [], "ordinal": 0, "retry_tasks": [], "journal": "cyclers": ["items": [], "ordinal": 0, "items": ["taskset_id": [00000000-0000-0000-0000-000000000000, 0], "start_tasknum": 0], "ordinal": -1], "pending_tasks": [], "active_tasks": [], "next_taskset_num": 3, "data_id": aae5a1c7-c127-4189-94e5-c6769e4ddb2c, "next_job_num": 3}
+2018-06-07 13:12:16.487 Unloaded data aae5a1c7-c127-4189-94e5-c6769e4ddb2c
+2018-06-07 13:12:16.494 Running command 6: {num: 6, command: "quit"}
+2018-06-07 13:12:16.494 Command 6 returned: {num: 6, code: "ok", type: "response"}
+2018-06-07 13:12:16.494 Shutting down
