@@ -103,7 +103,7 @@ impl Log for Loggest {
                 }
                 let mut file = file.as_ref().unwrap();
                 let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
-                let now = now.as_secs() * 1000 + u64::from(now.subsec_millis());
+                let now = now.as_millis() as u64;
                 file.write_all(&now.to_le_bytes())?;
                 write!(file, "[{}] {} -- {}\n", record.level(), record.target(), record.args())?;
                 Ok(())
