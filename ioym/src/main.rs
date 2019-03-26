@@ -86,26 +86,22 @@ impl<R: BufRead> Ioym<R> {
         );
 
         loop {
-            let ts = match read_time(&mut self.input, self.offset.unwrap_or(*OFFSET)) {
+            match read_time(&mut self.input, self.offset.unwrap_or(*OFFSET)) {
                 Err(Error::Io(ref e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
-                Err(Error::InvalidTimestamp) => {
-                    copy_until(&mut self.input, &mut io::sink(), b'\n')?;
-                    continue;
-                }
+                Err(Error::InvalidTimestamp) => (),
                 Err(e) => Err(e)?,
-                Ok(ts) => ts,
+                Ok(ts) => write!(
+                    &mut output,
+                    "{}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} ",
+                    ts.year(),
+                    ts.month(),
+                    ts.day(),
+                    ts.hour(),
+                    ts.minute(),
+                    ts.second(),
+                    ts.nanosecond() / 1_000_000,
+                )?,
             };
-            write!(
-                &mut output,
-                "{}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} ",
-                ts.year(),
-                ts.month(),
-                ts.day(),
-                ts.hour(),
-                ts.minute(),
-                ts.second(),
-                ts.nanosecond() / 1_000_000,
-            )?;
 
             copy_until(&mut self.input, &mut output, b'\n')?;
         }

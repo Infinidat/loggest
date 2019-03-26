@@ -1,6 +1,6 @@
 [package]
 name = "ioym"
-version = "0.1.3"
+version = "0.1.4"
 description = "A utility for extracting logs written by loggest"
 authors = ["Dror Levin <spatz@psybear.com>"]
 repository = "https://github.com/drrlvn/loggest"
