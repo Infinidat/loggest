@@ -31,6 +31,9 @@ enum Error {
 
     #[fail(display = "Outputting to standard output is not supported with multiple inputs")]
     StdoutForbidsMultipleInputs,
+
+    #[fail(display = "Line has invalid timestamp")]
+    InvalidTimestamp,
 }
 
 impl From<io::Error> for Error {
@@ -84,7 +87,11 @@ impl<R: BufRead> Ioym<R> {
 
         loop {
             let ts = match read_time(&mut self.input, self.offset.unwrap_or(*OFFSET)) {
-                Err(ref e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(Error::Io(ref e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(Error::InvalidTimestamp) => {
+                    copy_until(&mut self.input, &mut io::sink(), b'\n')?;
+                    continue;
+                }
                 Err(e) => Err(e)?,
                 Ok(ts) => ts,
             };
@@ -142,9 +149,12 @@ where
     }
 }
 
-fn read_time<R: BufRead>(input: &mut R, offset: chrono::FixedOffset) -> io::Result<chrono::DateTime<FixedOffset>> {
+fn read_time<R: BufRead>(input: &mut R, offset: chrono::FixedOffset) -> IoymResult<chrono::DateTime<FixedOffset>> {
     let duration = Duration::from_millis(input.read_u64::<LE>()?);
-    Ok(offset.timestamp(duration.as_secs() as i64, duration.subsec_nanos()))
+    match offset.timestamp_opt(duration.as_secs() as i64, duration.subsec_nanos()) {
+        chrono::offset::LocalResult::Single(timestamp) => Ok(timestamp),
+        _ => Err(Error::InvalidTimestamp),
+    }
 }
 
 fn open_ioym_file(filename: &Path) -> IoymResult<fs::File> {
