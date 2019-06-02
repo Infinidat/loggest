@@ -7,7 +7,6 @@ use std::ffi::OsStr;
 use std::fs;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
-use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use structopt::StructOpt;
@@ -25,9 +24,6 @@ enum Error {
 
     #[fail(display = "Unsupported file type for \"{}\"", _0)]
     UnsupportedFileType(String),
-
-    #[fail(display = "File \"{}\" not found", _0)]
-    FileNotFound(String),
 
     #[fail(display = "Outputting to standard output is not supported with multiple inputs")]
     StdoutForbidsMultipleInputs,
@@ -80,10 +76,7 @@ impl<R: BufRead> Ioym<R> {
     }
 
     fn decode<W: Write>(&mut self, output: &mut W) -> IoymResult<()> {
-        let mut output = std::io::BufWriter::with_capacity(
-            zstd::Decoder::<BufReader<fs::File>>::recommended_output_size(),
-            output,
-        );
+        let mut output = std::io::BufWriter::with_capacity(zstd::Decoder::<R>::recommended_output_size(), output);
 
         loop {
             match read_time(&mut self.input, self.offset.unwrap_or(*OFFSET)) {
@@ -153,21 +146,12 @@ fn read_time<R: BufRead>(input: &mut R, offset: chrono::FixedOffset) -> IoymResu
     }
 }
 
-fn open_ioym_file(filename: &Path) -> IoymResult<fs::File> {
-    if !filename.exists() {
-        return Err(Error::FileNotFound(filename.to_string_lossy().to_string()));
+fn handle_file(filename: &Path, output: Output, is_utc: bool) -> IoymResult<()> {
+    if filename.extension() != Some(OsStr::new(EXT)) {
+        return Err(Error::UnsupportedFileType(filename.to_string_lossy().to_string()));
     }
 
-    match filename.extension().and_then(OsStr::to_str) {
-        Some(EXT) => (),
-        _ => return Err(Error::UnsupportedFileType(filename.to_string_lossy().to_string())),
-    };
-
-    Ok(fs::File::open(filename)?)
-}
-
-fn handle_file(filename: &OsStr, output: Output, is_utc: bool) -> IoymResult<()> {
-    let mut ioym = Ioym::with_reader(open_ioym_file(Path::new(filename))?)?;
+    let mut ioym = Ioym::with_reader(fs::File::open(filename)?)?;
 
     if is_utc {
         ioym.set_offset(Utc.fix());
@@ -179,15 +163,11 @@ fn handle_file(filename: &OsStr, output: Output, is_utc: bool) -> IoymResult<()>
             ioym.decode(&mut stdout.lock())?;
         }
         Output::File => {
-            let output_file = OsStr::from_bytes(&filename.as_bytes()[..filename.len() - EXT.len() - 1]);
-            ioym.decode(&mut fs::OpenOptions::new().write(true).create_new(true).open(output_file)?)?;
+            let output_file = filename.parent().unwrap().join(filename.file_stem().unwrap());
+            ioym.decode(&mut fs::OpenOptions::new().write(true).create_new(true).open(&output_file)?)?;
 
             let metadata = fs::metadata(filename)?;
-            filetime::set_file_times(
-                output_file,
-                filetime::FileTime::from_system_time(metadata.accessed().unwrap()),
-                filetime::FileTime::from_system_time(metadata.modified().unwrap()),
-            )?;
+            filetime::set_file_mtime(&output_file, metadata.modified()?.into())?;
 
             fs::remove_file(filename)?;
         }
@@ -223,7 +203,7 @@ fn run() -> IoymResult<()> {
         .par_iter()
         .map(|filename| {
             handle_file(
-                filename.as_os_str(),
+                filename,
                 if opt.stdout { Output::Stdout } else { Output::File },
                 opt.utc,
             )
