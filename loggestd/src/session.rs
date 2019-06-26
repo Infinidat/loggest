@@ -1,6 +1,7 @@
 use super::codec::{LoggestdCodec, LoggestdData::*};
 use futures::prelude::*;
 use futures::try_ready;
+use log::{info, trace};
 use std::default::Default;
 use std::fmt::Debug;
 use std::fs::File;
@@ -26,8 +27,8 @@ impl State {
         if let State::FileOpened(_) = self {
             panic!("File already opened");
         } else {
-            println!("Opening {}", path);
-            *self = State::FileOpened(File::create(path).unwrap());
+            *self = State::FileOpened(File::create(&path).unwrap());
+            info!("Opened {}", path);
         }
     }
 }
@@ -55,7 +56,7 @@ impl<C: AsyncRead + AsyncWrite + Debug> Future for LoggestdSession<C> {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         loop {
             if let Some(packet) = try_ready!(self.reader.poll()) {
-                println!("packet: {:?}", packet);
+                trace!("frame: {:x?}", packet);
 
                 match packet {
                     FileName(f) => {

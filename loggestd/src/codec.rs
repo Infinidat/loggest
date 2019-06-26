@@ -1,5 +1,6 @@
 use byteorder::{BigEndian, ByteOrder};
 use bytes::BytesMut;
+use log::trace;
 use std::io;
 use std::str::from_utf8;
 use tokio::codec::Decoder;
@@ -22,7 +23,7 @@ impl Decoder for LoggestdCodec {
     type Error = io::Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        println!("{:?}", src);
+        trace!("{:?}", src);
         if !self.sending_data {
             let filename_length = {
                 if src.len() < LENGTH_SIZE {

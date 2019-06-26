@@ -3,17 +3,21 @@ use tokio::net::unix::UnixListener;
 use tokio::prelude::*;
 mod codec;
 mod session;
+use env_logger::{self, Env};
+use log::{error, info};
 
 fn main() {
+    env_logger::from_env(Env::default().default_filter_or("info")).init();
+
     let socket = UnixListener::bind("/run/user/1000/loggestd.sock").unwrap().incoming();
     let server = socket
         .for_each(|socket| {
-            println!("Connected: {:?}", socket);
+            info!("Connected: {:?}", socket);
             tokio::spawn(session::LoggestdSession::new(socket).map_err(|_| ()));
             Ok(())
         })
         .map_err(|e| {
-            println!("Error accepting: {:?}", e);
+            error!("Error accepting: {:?}", e);
         });
 
     tokio::run(server);
