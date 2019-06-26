@@ -23,13 +23,15 @@ impl State {
         }
     }
 
-    fn open_file(&mut self, path: &str) {
+    fn open_file(&mut self, path: &str) -> Result<(), io::Error> {
         if let State::FileOpened(_) = self {
             panic!("File already opened");
         } else {
-            *self = State::FileOpened(File::create(&path).unwrap());
+            *self = State::FileOpened(File::create(&path)?);
             info!("Opened {}", path);
         }
+
+        Ok(())
     }
 }
 
@@ -60,11 +62,11 @@ impl<C: AsyncRead + AsyncWrite + Debug> Future for LoggestdSession<C> {
 
                 match packet {
                     FileName(f) => {
-                        self.state.open_file(&f);
+                        self.state.open_file(&f)?;
                     }
                     FileData(data) => {
                         let f = self.state.unwrap_file();
-                        f.write_all(&data).unwrap();
+                        f.write_all(&data)?;
                     }
                 };
             } else {

@@ -35,7 +35,7 @@ impl Decoder for LoggestdCodec {
             if src.len() >= filename_length + LENGTH_SIZE {
                 src.split_to(LENGTH_SIZE);
                 let buf = src.split_to(filename_length);
-                let filename = String::from(from_utf8(&buf).unwrap());
+                let filename = String::from(from_utf8(&buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?);
                 self.sending_data = true;
                 Ok(Some(LoggestdData::FileName(filename)))
             } else {

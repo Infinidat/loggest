@@ -13,7 +13,9 @@ fn main() {
     let server = socket
         .for_each(|socket| {
             info!("Connected: {:?}", socket);
-            tokio::spawn(session::LoggestdSession::new(socket).map_err(|_| ()));
+            tokio::spawn(session::LoggestdSession::new(socket).map_err(|e| {
+                error!("Session error: {}", e);
+            }));
             Ok(())
         })
         .map_err(|e| {
