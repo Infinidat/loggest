@@ -10,7 +10,7 @@ const LENGTH_SIZE: usize = 2;
 #[derive(Debug)]
 pub enum LoggestdData {
     FileName(String),
-    FileData(Vec<u8>),
+    FileData(BytesMut),
 }
 
 #[derive(Default, Debug)]
@@ -47,7 +47,7 @@ impl Decoder for LoggestdCodec {
             Ok(if buf.is_empty() {
                 None
             } else {
-                Some(LoggestdData::FileData(buf.to_vec()))
+                Some(LoggestdData::FileData(buf))
             })
         }
     }
