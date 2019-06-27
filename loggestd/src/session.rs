@@ -1,21 +1,21 @@
 use super::codec::{LoggestdCodec, LoggestdData::*};
+use super::log_file::LogFile;
 use futures::prelude::*;
 use futures::try_ready;
 use log::{info, trace};
 use std::default::Default;
 use std::fmt::Debug;
-use std::fs::File;
 use std::io;
 use tokio::codec::FramedRead;
 use tokio::{io::ReadHalf, prelude::*};
 
 enum State {
     Initiated,
-    FileOpened(File),
+    FileOpened(LogFile),
 }
 
 impl State {
-    fn unwrap_file(&mut self) -> &mut File {
+    fn unwrap_file(&mut self) -> &mut LogFile {
         if let State::FileOpened(f) = self {
             f
         } else {
@@ -27,7 +27,7 @@ impl State {
         if let State::FileOpened(_) = self {
             panic!("File already opened");
         } else {
-            *self = State::FileOpened(File::create(&path)?);
+            *self = State::FileOpened(LogFile::open(&path)?);
             info!("Opened {}", path);
         }
 
@@ -66,7 +66,7 @@ impl<C: AsyncRead + AsyncWrite + Debug> Future for LoggestdSession<C> {
                     }
                     FileData(data) => {
                         let f = self.state.unwrap_file();
-                        f.write_all(&data)?;
+                        f.write(&data)?;
                     }
                 };
             } else {

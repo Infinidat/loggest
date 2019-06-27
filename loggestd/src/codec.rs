@@ -1,5 +1,5 @@
 use byteorder::{BigEndian, ByteOrder};
-use bytes::BytesMut;
+use bytes::{Bytes, BytesMut};
 use log::trace;
 use std::io;
 use std::str::from_utf8;
@@ -10,7 +10,7 @@ const LENGTH_SIZE: usize = 2;
 #[derive(Debug)]
 pub enum LoggestdData {
     FileName(String),
-    FileData(BytesMut),
+    FileData(Bytes),
 }
 
 #[derive(Default, Debug)]
@@ -47,7 +47,7 @@ impl Decoder for LoggestdCodec {
             Ok(if buf.is_empty() {
                 None
             } else {
-                Some(LoggestdData::FileData(buf))
+                Some(LoggestdData::FileData(buf.freeze()))
             })
         }
     }
