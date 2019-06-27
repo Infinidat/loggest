@@ -6,6 +6,7 @@ use log::{info, trace};
 use std::default::Default;
 use std::fmt::Debug;
 use std::io;
+use std::path::PathBuf;
 use tokio::codec::FramedRead;
 use tokio::{io::ReadHalf, prelude::*};
 
@@ -23,12 +24,11 @@ impl State {
         }
     }
 
-    fn open_file(&mut self, path: &str) -> Result<(), io::Error> {
+    fn open_file(&mut self, filename: PathBuf) -> Result<(), io::Error> {
         if let State::FileOpened(_) = self {
             panic!("File already opened");
         } else {
-            *self = State::FileOpened(LogFile::open(&path)?);
-            info!("Opened {}", path);
+            *self = State::FileOpened(LogFile::open(filename)?);
         }
 
         Ok(())
@@ -62,7 +62,7 @@ impl<C: AsyncRead + AsyncWrite + Debug> Future for LoggestdSession<C> {
 
                 match packet {
                     FileName(f) => {
-                        self.state.open_file(&f)?;
+                        self.state.open_file(f)?;
                     }
                     FileData(data) => {
                         let f = self.state.unwrap_file();
@@ -73,5 +73,18 @@ impl<C: AsyncRead + AsyncWrite + Debug> Future for LoggestdSession<C> {
                 return Ok(Async::Ready(()));
             }
         }
+    }
+}
+
+impl<C: AsyncRead + AsyncWrite + Debug> Drop for LoggestdSession<C> {
+    fn drop(&mut self) {
+        match self.state {
+            State::FileOpened(ref f) => {
+                info!("Disconnected {}", f.filename().display());
+            }
+            _ => {
+                info!("Unnamed session disconnected");
+            }
+        };
     }
 }

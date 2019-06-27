@@ -2,6 +2,7 @@ use byteorder::{BigEndian, ByteOrder};
 use bytes::{Bytes, BytesMut};
 use log::trace;
 use std::io;
+use std::path::PathBuf;
 use std::str::from_utf8;
 use tokio::codec::Decoder;
 
@@ -9,7 +10,7 @@ const LENGTH_SIZE: usize = 2;
 
 #[derive(Debug)]
 pub enum LoggestdData {
-    FileName(String),
+    FileName(PathBuf),
     FileData(Bytes),
 }
 
@@ -35,9 +36,17 @@ impl Decoder for LoggestdCodec {
             if src.len() >= filename_length + LENGTH_SIZE {
                 src.split_to(LENGTH_SIZE);
                 let buf = src.split_to(filename_length);
-                let filename = String::from(from_utf8(&buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?);
+
+                let filename = from_utf8(&buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                if filename.contains('/') || filename.contains('\\') {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("Invalid file name {}", filename),
+                    ));
+                }
+
                 self.sending_data = true;
-                Ok(Some(LoggestdData::FileName(filename)))
+                Ok(Some(LoggestdData::FileName(PathBuf::from(filename))))
             } else {
                 Ok(None)
             }
