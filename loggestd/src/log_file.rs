@@ -38,8 +38,14 @@ impl LogFile {
     }
 
     fn archive(filename: &Path) -> Result<(), io::Error> {
-        let mut archived_path = PathBuf::from("archived");
-        archived_path.push(&filename);
+        let archived_path: PathBuf = {
+            let mut p = PathBuf::from("archived");
+            p.push(&filename);
+            let mut os_string = p.into_os_string();
+            os_string.push(".ioym");
+            os_string.into()
+        };
+
         debug!("{} -> {}", filename.display(), archived_path.display());
         rename(&filename, &archived_path)
     }
