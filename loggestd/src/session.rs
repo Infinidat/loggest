@@ -80,7 +80,7 @@ impl<C: AsyncRead + AsyncWrite + Debug> Drop for LoggestdSession<C> {
     fn drop(&mut self) {
         match self.state {
             State::FileOpened(ref f) => {
-                info!("Disconnected {}", f.filename().display());
+                info!("Disconnected {}", f.base_filename().display());
             }
             _ => {
                 info!("Unnamed session disconnected");

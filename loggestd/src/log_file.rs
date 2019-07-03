@@ -10,30 +10,30 @@ const ARCHIVE_THREASHOLD: usize = 1024 * 1024 * 1024;
 
 pub struct LogFile {
     file: File,
-    filename: PathBuf,
+    base_filename: PathBuf,
     consumed_data: usize,
     index: usize,
 }
 
-impl LogFile {
-    pub fn open(mut filename: PathBuf) -> Result<Self, io::Error> {
-        let new_extension = filename
-            .extension()
-            .map(|e| {
-                let mut e = e.to_os_string();
-                e.push(".1");
-                e
-            })
-            .unwrap_or_else(|| "1".into());
-        filename.set_extension(new_extension);
+fn generate_filename(base_name: &Path, index: usize) -> PathBuf {
+    let mut path = PathBuf::from(base_name);
 
+    let new_filename = format!("{}.{:02}.ioym", path.file_name().unwrap().to_str().unwrap(), index);
+    path.set_file_name(new_filename);
+    path
+}
+
+impl LogFile {
+    pub fn open(base_filename: PathBuf) -> Result<Self, io::Error> {
+        let index = 1;
+        let filename = generate_filename(&base_filename, index);
         let file = File::create(&filename)?;
-        info!("Opened {}", &filename.display());
+        info!("Opened {}", filename.display());
         Ok(LogFile {
             file,
-            filename,
+            base_filename,
             consumed_data: 0,
-            index: 1,
+            index,
         })
     }
 
@@ -41,9 +41,7 @@ impl LogFile {
         let archived_path: PathBuf = {
             let mut p = PathBuf::from("archived");
             p.push(&filename);
-            let mut os_string = p.into_os_string();
-            os_string.push(".ioym");
-            os_string.into()
+            p
         };
 
         debug!("{} -> {}", filename.display(), archived_path.display());
@@ -51,12 +49,11 @@ impl LogFile {
     }
 
     fn rotate(&mut self) -> Result<(), io::Error> {
-        let old_filename = self.filename.clone();
-
+        let old_filename = generate_filename(&self.base_filename, self.index);
         self.index += 1;
-        self.filename.set_extension(format!("{}", self.index));
-        self.file = File::create(&self.filename)?;
-        info!("Opened {}", &self.filename.display());
+        let filename = generate_filename(&self.base_filename, self.index);
+        self.file = File::create(&filename)?;
+        info!("Opened {}", filename.display());
         self.consumed_data = 0;
 
         LogFile::archive(&old_filename)?;
@@ -74,13 +71,13 @@ impl LogFile {
         Ok(())
     }
 
-    pub fn filename(&self) -> &Path {
-        &self.filename
+    pub fn base_filename(&self) -> &Path {
+        &self.base_filename
     }
 }
 
 impl Drop for LogFile {
     fn drop(&mut self) {
-        LogFile::archive(&self.filename).ok();
+        LogFile::archive(&generate_filename(&self.base_filename, self.index)).ok();
     }
 }

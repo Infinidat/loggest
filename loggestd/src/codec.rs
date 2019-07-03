@@ -40,10 +40,10 @@ impl Decoder for LoggestdCodec {
                 let filename = from_utf8(&buf)
                     .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                     .map(PathBuf::from)?;
-                if filename.parent().is_some() {
+                if filename.parent().filter(|s| !s.as_os_str().is_empty()).is_some() {
                     return Err(io::Error::new(
                         io::ErrorKind::Other,
-                        format!("Invalid file name {}", filename.display()),
+                        format!("Invalid file name {}:", filename.display()),
                     ));
                 }
 
