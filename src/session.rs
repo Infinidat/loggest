@@ -1,4 +1,5 @@
 use bytes::{BigEndian, ByteOrder};
+use std::env;
 use std::io::{self, Write};
 use std::os::unix::net::UnixStream;
 
@@ -11,7 +12,8 @@ where
 
 impl Session<UnixStream> {
     pub fn connect_unix() -> Result<Session<UnixStream>, io::Error> {
-        UnixStream::connect("/run/user/1000/loggestd.sock").map(|transport| Session { transport })
+        UnixStream::connect(env::var("LOGGESTD_SOCKET").unwrap_or_else(|_| "/run/loggestd.sock".into()))
+            .map(|transport| Session { transport })
     }
 }
 
@@ -47,6 +49,7 @@ where
     fn write(&mut self, buf: &[u8]) -> Result<usize, io::Error> {
         self.transport.write(buf)
     }
+
     fn flush(&mut self) -> Result<(), io::Error> {
         self.transport.flush()
     }

@@ -37,16 +37,18 @@ impl Decoder for LoggestdCodec {
                 src.split_to(LENGTH_SIZE);
                 let buf = src.split_to(filename_length);
 
-                let filename = from_utf8(&buf).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                if filename.contains('/') || filename.contains('\\') {
+                let filename = from_utf8(&buf)
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                    .map(PathBuf::from)?;
+                if filename.parent().is_some() {
                     return Err(io::Error::new(
                         io::ErrorKind::Other,
-                        format!("Invalid file name {}", filename),
+                        format!("Invalid file name {}", filename.display()),
                     ));
                 }
 
                 self.sending_data = true;
-                Ok(Some(LoggestdData::FileName(PathBuf::from(filename))))
+                Ok(Some(LoggestdData::FileName(filename)))
             } else {
                 Ok(None)
             }

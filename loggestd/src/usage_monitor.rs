@@ -46,8 +46,7 @@ pub struct UsageMonitor {
 fn get_entries_with_metadata(directory: &Path) -> Result<Vec<(DirEntry, Option<Metadata>)>, io::Error> {
     let readdir = fs::read_dir(directory)?;
 
-    let mut result: Vec<(DirEntry, Option<Metadata>)> =
-        Vec::with_capacity(dbg!(readdir.size_hint()).1.unwrap_or(0));
+    let mut result: Vec<(DirEntry, Option<Metadata>)> = Vec::with_capacity(readdir.size_hint().1.unwrap_or(0));
 
     for entry_result in readdir {
         match entry_result {
@@ -123,7 +122,7 @@ fn garbage_collect() -> Result<(), io::Error> {
 
 impl Default for UsageMonitor {
     fn default() -> UsageMonitor {
-        let interval = Interval::new(Instant::now(), Duration::from_secs(10));
+        let interval = Interval::new(Instant::now(), Duration::from_secs(60));
         UsageMonitor { interval }
     }
 }

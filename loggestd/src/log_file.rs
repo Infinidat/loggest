@@ -5,8 +5,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use zstd::stream::copy_encode;
 
-const COMPRESSION_LEVEL: i32 = 6;
-const ARCHIVE_THREASHOLD: usize = 1_073_741_824;
+const COMPRESSION_LEVEL: i32 = 1;
+const ARCHIVE_THREASHOLD: usize = 1024 * 1024 * 1024;
 
 pub struct LogFile {
     file: File,

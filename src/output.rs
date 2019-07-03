@@ -25,8 +25,7 @@ pub fn log(record: &Record) {
         .with(|output| -> Result<(), Ignore> {
             if output.borrow().is_none() {
                 let filename = get_thread_file(unsafe { &CONFIG.as_ref().unwrap().base_filename });
-                let session = session::Session::connect_unix()?
-                    .establish(filename.to_str().ok_or(LoggestError::BadFileName).unwrap())?;
+                let session = session::Session::connect_unix()?.establish(filename.to_str().unwrap())?;
 
                 output.replace(Some(session));
             }
@@ -49,15 +48,13 @@ pub fn log(record: &Record) {
         .ok();
 }
 
-pub fn initialize_main_thread() {
-    OUTPUT
-        .with(|output| -> Result<(), Ignore> {
-            assert!(output.borrow().is_none());
-            let filename = unsafe { &CONFIG.as_ref().unwrap().base_filename };
-            let session = session::Session::connect_unix()?
-                .establish(filename.to_str().ok_or(LoggestError::BadFileName).unwrap())?;
-            output.replace(Some(session));
-            Ok(())
-        })
-        .ok();
+pub fn initialize_main_thread() -> Result<(), LoggestError> {
+    OUTPUT.with(|output| -> Result<(), LoggestError> {
+        assert!(output.borrow().is_none());
+        let filename = unsafe { &CONFIG.as_ref().unwrap().base_filename };
+        let session =
+            session::Session::connect_unix()?.establish(filename.to_str().ok_or(LoggestError::BadFileName)?)?;
+        output.replace(Some(session));
+        Ok(())
+    })
 }

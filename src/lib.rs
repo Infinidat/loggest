@@ -64,7 +64,7 @@ where
         });
     }
 
-    output::initialize_main_thread();
+    output::initialize_main_thread()?;
 
     Ok(())
 }
