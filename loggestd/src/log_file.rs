@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use log::{debug, info};
-use std::fs::{rename, File};
+use std::fs::{create_dir, rename, File};
 use std::io;
 use std::path::{Path, PathBuf};
 use zstd::stream::copy_encode;
@@ -23,6 +23,20 @@ fn generate_filename(base_name: &Path, index: usize) -> PathBuf {
     path
 }
 
+fn ensure_directory(directory: &Path) -> Result<(), io::Error> {
+    let result = create_dir(directory);
+
+    match result {
+        Ok(()) => {
+            debug!("Created {}", directory.display());
+        }
+        Err(ref e) if e.kind() == io::ErrorKind::AlreadyExists => (),
+        Err(e) => return Err(e),
+    }
+
+    Ok(())
+}
+
 impl LogFile {
     pub fn open(base_filename: PathBuf) -> Result<Self, io::Error> {
         let index = 1;
@@ -38,11 +52,10 @@ impl LogFile {
     }
 
     fn archive(filename: &Path) -> Result<(), io::Error> {
-        let archived_path: PathBuf = {
-            let mut p = PathBuf::from("archived");
-            p.push(&filename);
-            p
-        };
+        let archive_directory = filename.parent().unwrap().join("archived");
+        ensure_directory(&archive_directory)?;
+
+        let archived_path = archive_directory.join(filename.file_name().unwrap());
 
         debug!("{} -> {}", filename.display(), archived_path.display());
         rename(&filename, &archived_path)

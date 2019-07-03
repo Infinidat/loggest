@@ -1,3 +1,4 @@
+use super::args::Opt;
 use super::codec::{LoggestdCodec, LoggestdData::*};
 use super::log_file::LogFile;
 use futures::prelude::*;
@@ -7,6 +8,7 @@ use std::default::Default;
 use std::fmt::Debug;
 use std::io;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::codec::FramedRead;
 use tokio::{io::ReadHalf, prelude::*};
 
@@ -37,15 +39,17 @@ impl State {
 
 pub struct LoggestdSession<C: AsyncRead + AsyncWrite + Debug> {
     state: State,
+    opt: Arc<Opt>,
     reader: FramedRead<ReadHalf<C>, LoggestdCodec>,
 }
 
 impl<C: AsyncRead + AsyncWrite + Debug> LoggestdSession<C> {
-    pub fn new(connection: C) -> Self {
+    pub fn new(connection: C, opt: Arc<Opt>) -> Self {
         let (r, _) = connection.split();
         let reader = FramedRead::new(r, LoggestdCodec::default());
         Self {
             reader,
+            opt,
             state: State::Initiated,
         }
     }
@@ -62,7 +66,7 @@ impl<C: AsyncRead + AsyncWrite + Debug> Future for LoggestdSession<C> {
 
                 match packet {
                     FileName(f) => {
-                        self.state.open_file(f)?;
+                        self.state.open_file(self.opt.directory.join(f))?;
                     }
                     FileData(data) => {
                         let f = self.state.unwrap_file();
