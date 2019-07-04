@@ -1,12 +1,12 @@
 use env_logger::{self, Env};
 use future::Future;
-use futures::future::lazy;
 use log::{debug, error, info};
 use std::fs;
 use std::sync::Arc;
 use structopt::StructOpt;
 use tokio::net::unix::UnixListener;
 use tokio::prelude::*;
+use tokio::runtime::Runtime;
 
 mod args;
 mod codec;
@@ -29,13 +29,11 @@ fn main() {
     info!("Listening in {}", opt.unix_socket.display());
     let socket = UnixListener::bind(&opt.unix_socket).unwrap().incoming();
     info!("Logging to {}", opt.directory.display());
-    let server = lazy(move || {
-        tokio::spawn(usage_monitor::UsageMonitor::new(&opt.directory).map_err(|e| {
-            error!("Usage monitor error: {}", e);
-        }));
 
-        socket
-            .for_each({
+    let server = socket
+        .for_each({
+            let opt = opt.clone();
+            {
                 move |socket| {
                     info!("Connected: {:?}", socket);
                     tokio::spawn(session::LoggestdSession::new(socket, opt.clone()).map_err(|e| {
@@ -43,11 +41,37 @@ fn main() {
                     }));
                     Ok(())
                 }
-            })
-            .map_err(|e| {
-                error!("Error accepting: {:?}", e);
-            })
-    });
+            }
+        })
+        .map_err(|e| {
+            error!("Error accepting: {:?}", e);
+        });
 
-    tokio::run(server);
+    let ctrl_c = tokio_signal::ctrl_c()
+        .flatten_stream()
+        .into_future()
+        .map_err(|(e, _)| error!("Error setting up Ctrl+C handler: {}", e))
+        .map(|_| info!("Ctrl+C received"));
+
+    #[cfg(unix)]
+    let ctrl_c = {
+        use tokio_signal::unix::{Signal, SIGTERM};
+        let sigterm = Signal::new(SIGTERM)
+            .flatten_stream()
+            .into_future()
+            .map_err(|(e, _)| error!("Error setting up SIGTERM handler: {}", e))
+            .map(|_| info!("SIGTERM received"));
+
+        ctrl_c.select(sigterm)
+    };
+
+    let mut rt = Runtime::new().unwrap();
+    rt.spawn(server);
+    rt.spawn(usage_monitor::UsageMonitor::new(&opt.directory).map_err(|e| {
+        error!("Usage monitor error: {}", e);
+    }));
+
+    rt.block_on(ctrl_c).ok();
+
+    info!("Server exited");
 }
