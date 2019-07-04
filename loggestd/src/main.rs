@@ -1,7 +1,8 @@
 use env_logger::{self, Env};
 use future::Future;
 use futures::future::lazy;
-use log::{error, info};
+use log::{debug, error, info};
+use std::fs;
 use std::sync::Arc;
 use structopt::StructOpt;
 use tokio::net::unix::UnixListener;
@@ -19,6 +20,11 @@ fn main() {
     env_logger::from_env(Env::default().default_filter_or("info"))
         .default_format_timestamp(false)
         .init();
+
+    if opt.unix_socket.exists() {
+        debug!("Deleting {}", opt.unix_socket.display());
+        fs::remove_file(&opt.unix_socket).unwrap();
+    }
 
     info!("Listening in {}", opt.unix_socket.display());
     let socket = UnixListener::bind(&opt.unix_socket).unwrap().incoming();
