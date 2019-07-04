@@ -4,32 +4,32 @@ stages:
       - job: Test
         strategy:
           matrix:
-          mac-stable-lib:
-            imageName: 'macos-10.13'
-            rustup_toolchain: stable
-            working_directory: .
-          linux-stable-lib:
-            imageName: 'ubuntu-16.04'
-            rustup_toolchain: stable
-            working_directory: .
+            mac-stable-lib:
+              imageName: 'macos-10.13'
+              rustup_toolchain: stable
+              working_directory: .
+            linux-stable-lib:
+              imageName: 'ubuntu-16.04'
+              rustup_toolchain: stable
+              working_directory: .
 
-          mac-stable-ioym:
-            imageName: 'macos-10.13'
-            rustup_toolchain: stable
-            working_directory: ioym
-          linux-stable-ioym:
-            imageName: 'ubuntu-16.04'
-            rustup_toolchain: stable
-            working_directory: ioym
+            mac-stable-ioym:
+              imageName: 'macos-10.13'
+              rustup_toolchain: stable
+              working_directory: ioym
+            linux-stable-ioym:
+              imageName: 'ubuntu-16.04'
+              rustup_toolchain: stable
+              working_directory: ioym
 
-          mac-stable-loggestd:
-            imageName: 'macos-10.13'
-            rustup_toolchain: stable
-            working_directory: loggestd
-          linux-stable-loggestd:
-            imageName: 'ubuntu-16.04'
-            rustup_toolchain: stable
-            working_directory: loggestd
+            mac-stable-loggestd:
+              imageName: 'macos-10.13'
+              rustup_toolchain: stable
+              working_directory: loggestd
+            linux-stable-loggestd:
+              imageName: 'ubuntu-16.04'
+              rustup_toolchain: stable
+              working_directory: loggestd
 
         pool:
           vmImage: $(imageName)
