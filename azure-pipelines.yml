@@ -1,4 +1,17 @@
 stages:
+
+  - stage: Release
+    jobs:
+      - job: Build_RPM
+        pool:
+          vmImage: 'Ubuntu-16.04'
+        container: registry.gitlab.com/infinidat/docker-rust-rpm:latest
+        steps:
+          - script: whoami
+          - script: rpmbuild -D "_VERSION 1" -D "_TARGET x86_64-unknown-linux-musl" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba ioym.spec
+            displayName: Build IOYM RPM
+            workingDirectory: ioym
+
   - stage: Test
     jobs:
       - job: Test
