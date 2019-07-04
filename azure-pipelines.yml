@@ -1,11 +1,33 @@
 strategy:
   matrix:
-    linux-stable:
+    mac-stable-lib:
+      imageName: 'macos-10.13'
+      rustup_toolchain: stable
+      working_directory: .
+    linux-stable-lib:
       imageName: 'ubuntu-16.04'
       rustup_toolchain: stable
-    linux-beta:
+      working_directory: .
+
+    mac-stable-ioym:
+      imageName: 'macos-10.13'
+      rustup_toolchain: stable
+      working_directory: ioym
+    linux-stable-ioym:
       imageName: 'ubuntu-16.04'
-      rustup_toolchain: beta
+      rustup_toolchain: stable
+      working_directory: ioym
+
+    mac-stable-loggestd:
+      imageName: 'macos-10.13'
+      rustup_toolchain: stable
+      working_directory: loggestd
+    linux-stable-loggestd:
+      imageName: 'ubuntu-16.04'
+      rustup_toolchain: stable
+      working_directory: loggestd
+
+
 
 pool:
   vmImage: $(imageName)
@@ -27,36 +49,13 @@ steps:
 
   - script: cargo fmt --all -- --check
     displayName: rustfmt
+    workingDirectory: $(working_directory)
   - script: cargo build --all
     displayName: Cargo build
+    workingDirectory: $(working_directory)
   - script: cargo clippy --all-targets -- -D warnings
     displayName: clippy
+    workingDirectory: $(working_directory)
   - script: cargo test --all
     displayName: Cargo test
-
-
-  - script: cargo fmt --all -- --check
-    displayName: rustfmt (ioym)
-    workingDirectory: ioym
-  - script: cargo build --all
-    displayName: Cargo build (ioym)
-    workingDirectory: ioym
-  - script: cargo clippy --all-targets -- -D warnings
-    displayName: clippy (ioym)
-    workingDirectory: ioym
-  - script: cargo test --all
-    displayName: Cargo test (ioym)
-    workingDirectory: ioym
-
-  - script: cargo fmt --all -- --check
-    displayName: rustfmt (loggestd)
-    workingDirectory: loggestd
-  - script: cargo build --all
-    displayName: Cargo build (loggestd)
-    workingDirectory: loggestd
-  - script: cargo clippy --all-targets -- -D warnings
-    displayName: clippy (loggestd)
-    workingDirectory: loggestd
-  - script: cargo test --all
-    displayName: Cargo test (loggestd)
-    workingDirectory: loggestd
+    workingDirectory: $(working_directory)

@@ -30,10 +30,11 @@ impl SpaceData {
 }
 
 impl From<Statvfs> for SpaceData {
+    #[allow(clippy::identity_conversion)]
     fn from(source: Statvfs) -> Self {
         Self {
-            available: source.blocks_available() * source.fragment_size(),
-            total: source.blocks() * source.fragment_size(),
+            available: u64::from(source.blocks_available()) * source.fragment_size(),
+            total: u64::from(source.blocks()) * source.fragment_size(),
         }
     }
 }

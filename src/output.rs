@@ -14,9 +14,17 @@ thread_local! {
     static OUTPUT: RefCell<Option<session::EstablishedSession<UnixStream>>> = RefCell::new(None);
 }
 
+fn get_thread_id() -> usize {
+    #[cfg(target_os = "linux")]
+    return nix::unistd::gettid().as_raw() as usize;
+
+    #[cfg(all(not(target_os = "linux"), unix))]
+    return nix::sys::pthread::pthread_self() as usize;
+}
+
 fn get_thread_file(filename: &Path) -> PathBuf {
     let mut os_string = OsString::from(filename.as_os_str());
-    os_string.push(format!(".{}", nix::unistd::gettid()));
+    os_string.push(format!(".{}", get_thread_id()));
     os_string.into()
 }
 
