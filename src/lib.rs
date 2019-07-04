@@ -58,10 +58,7 @@ where
     set_max_level(level);
     unsafe {
         debug_assert!(CONFIG.is_none());
-        CONFIG = Some(Config {
-            level,
-            base_filename: base_filename,
-        });
+        CONFIG = Some(Config { level, base_filename });
     }
 
     output::initialize_main_thread()?;

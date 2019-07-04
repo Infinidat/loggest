@@ -36,13 +36,7 @@ pub fn log(record: &Record) {
             let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
             let now = now.as_millis() as u64;
             session.write_all(&now.to_le_bytes())?;
-            write!(
-                session,
-                "[{}] {} -- {}\n",
-                record.level(),
-                record.target(),
-                record.args()
-            )?;
+            writeln!(session, "[{}] {} -- {}", record.level(), record.target(), record.args())?;
             Ok(())
         })
         .ok();

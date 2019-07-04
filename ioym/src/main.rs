@@ -121,7 +121,7 @@ where
             };
             match memchr::memchr(delim, available) {
                 Some(i) => {
-                    w.write_all(&available[..i + 1])?;
+                    w.write_all(&available[..=i])?;
                     (true, i + 1)
                 }
                 None => {
