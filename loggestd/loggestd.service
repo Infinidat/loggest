@@ -1,0 +1,10 @@
+[Unit]
+Description=Loggestd Daemon
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/loggestd --directory /var/log/loggestd
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
