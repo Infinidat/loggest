@@ -1,5 +1,6 @@
 use futures::try_ready;
 use log::{debug, error, info};
+#[cfg(unix)]
 use nix::sys::statvfs::{statvfs, Statvfs};
 use std::fs::{self, DirEntry, Metadata};
 use std::io;
@@ -29,6 +30,7 @@ impl SpaceData {
     }
 }
 
+#[cfg(unix)]
 impl From<Statvfs> for SpaceData {
     #[allow(clippy::identity_conversion)]
     fn from(source: Statvfs) -> Self {
@@ -37,6 +39,47 @@ impl From<Statvfs> for SpaceData {
             total: u64::from(source.blocks()) * source.fragment_size(),
         }
     }
+}
+
+#[cfg(unix)]
+fn get_fs_data(directory: &Path) -> Result<SpaceData, io::Error> {
+    Ok(statvfs(directory)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
+        .into())
+}
+
+#[cfg(windows)]
+fn get_fs_data(directory: &Path) -> Result<SpaceData, io::Error> {
+    use widestring::U16CString;
+    use winapi::shared::minwindef::FALSE;
+    use winapi::um::{errhandlingapi::GetLastError, fileapi, winnt::ULARGE_INTEGER};
+
+    let wstr = U16CString::from_os_str(directory.as_os_str()).unwrap();
+
+    let mut avail: ULARGE_INTEGER = Default::default();
+    let mut total: ULARGE_INTEGER = Default::default();
+    let mut free: ULARGE_INTEGER = Default::default();
+
+    if FALSE
+        == unsafe {
+            fileapi::GetDiskFreeSpaceExW(
+                wstr.as_ptr(),
+                &mut avail as *mut _,
+                &mut total as *mut _,
+                &mut free as *mut _,
+            )
+        }
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("OS Error: {}", unsafe { GetLastError() }),
+        ));
+    }
+
+    Ok(SpaceData {
+        available: *unsafe { avail.QuadPart() },
+        total: *unsafe { total.QuadPart() },
+    })
 }
 
 pub struct UsageMonitor {
@@ -81,9 +124,8 @@ impl UsageMonitor {
             return Ok(());
         }
 
-        let fs_data: SpaceData = statvfs(&self.archive_dir)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
-            .into();
+        let fs_data = get_fs_data(&self.archive_dir)?;
+
         debug!("Filesytem information: {:?}", fs_data);
 
         if let Some(mut bytes_to_gc) = fs_data.bytes_to_gc() {

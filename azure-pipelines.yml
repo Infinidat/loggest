@@ -26,7 +26,10 @@ strategy:
       imageName: 'ubuntu-16.04'
       rustup_toolchain: stable
       working_directory: loggestd
-
+    win-stable-loggestd:
+      imageName: 'vs2017-win2016'
+      rustup_toolchain: stable
+      working_directory: loggestd
 
 
 pool:
