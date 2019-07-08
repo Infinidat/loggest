@@ -5,13 +5,23 @@ use log::Record;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::io::Write;
+#[cfg(windows)]
+use std::net::TcpStream;
+#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(windows)]
+use winapi::um::processthreadsapi::GetCurrentThreadId;
+
+#[cfg(windows)]
+type SessionTransport = TcpStream;
+
+#[cfg(unix)]
+type SessionTransport = UnixStream;
 
 thread_local! {
-    #[cfg(unix)]
-    static OUTPUT: RefCell<Option<session::EstablishedSession<UnixStream>>> = RefCell::new(None);
+    static OUTPUT: RefCell<Option<session::EstablishedSession<SessionTransport>>> = RefCell::new(None);
 }
 
 fn get_thread_id() -> usize {
@@ -20,6 +30,9 @@ fn get_thread_id() -> usize {
 
     #[cfg(all(not(target_os = "linux"), unix))]
     return nix::sys::pthread::pthread_self() as usize;
+
+    #[cfg(windows)]
+    return unsafe { GetCurrentThreadId() } as usize;
 }
 
 fn get_thread_file(filename: &Path) -> PathBuf {
@@ -33,7 +46,8 @@ pub fn log(record: &Record) {
         .with(|output| -> Result<(), Ignore> {
             if output.borrow().is_none() {
                 let filename = get_thread_file(unsafe { &CONFIG.as_ref().unwrap().base_filename });
-                let session = session::Session::connect_unix()?.establish(filename.to_str().unwrap())?;
+
+                let session = session::Session::connect()?.establish(filename.to_str().unwrap())?;
 
                 output.replace(Some(session));
             }
@@ -54,8 +68,9 @@ pub fn initialize_main_thread() -> Result<(), LoggestError> {
     OUTPUT.with(|output| -> Result<(), LoggestError> {
         assert!(output.borrow().is_none());
         let filename = unsafe { &CONFIG.as_ref().unwrap().base_filename };
+
         let session =
-            session::Session::connect_unix()?.establish(filename.to_str().ok_or(LoggestError::BadFileName)?)?;
+            session::Session::connect()?.establish(filename.to_str().ok_or(LoggestError::BadFileName)?)?;
         output.replace(Some(session));
         Ok(())
     })

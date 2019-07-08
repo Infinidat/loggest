@@ -13,3 +13,6 @@ failure = "0.1"
 log = { version = "0.4", features = ["std"] }
 nix = "0.14"
 bytes = "0.4.12"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3.7", features = ["processthreadsapi"] }
