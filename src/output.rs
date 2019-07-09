@@ -1,6 +1,6 @@
 use crate::ignore::Ignore;
 use crate::session;
-use crate::{LoggestError, CONFIG};
+use crate::CONFIG;
 use log::Record;
 use std::cell::RefCell;
 use std::ffi::OsString;
@@ -24,20 +24,27 @@ thread_local! {
     static OUTPUT: RefCell<Option<session::EstablishedSession<SessionTransport>>> = RefCell::new(None);
 }
 
-fn get_thread_id() -> usize {
+/// Get the system thread ID. The function returns None for the main thread.
+fn get_thread_id() -> Option<usize> {
+    if std::thread::current().name() == Some("main") {
+        return None;
+    }
+
     #[cfg(target_os = "linux")]
-    return nix::unistd::gettid().as_raw() as usize;
+    return Some(nix::unistd::gettid().as_raw() as usize);
 
     #[cfg(all(not(target_os = "linux"), unix))]
-    return nix::sys::pthread::pthread_self() as usize;
+    return Some(nix::sys::pthread::pthread_self() as usize);
 
     #[cfg(windows)]
-    return unsafe { GetCurrentThreadId() } as usize;
+    return Some(unsafe { GetCurrentThreadId() } as usize);
 }
 
 fn get_thread_file(filename: &Path) -> PathBuf {
     let mut os_string = OsString::from(filename.as_os_str());
-    os_string.push(format!(".{}", get_thread_id()));
+    if let Some(tid) = get_thread_id() {
+        os_string.push(format!(".{}", tid));
+    }
     os_string.into()
 }
 
@@ -64,14 +71,9 @@ pub fn log(record: &Record) {
         .ok();
 }
 
-pub fn initialize_main_thread() -> Result<(), LoggestError> {
-    OUTPUT.with(|output| -> Result<(), LoggestError> {
-        assert!(output.borrow().is_none());
-        let filename = unsafe { &CONFIG.as_ref().unwrap().base_filename };
-
-        let session =
-            session::Session::connect()?.establish(filename.to_str().ok_or(LoggestError::BadFileName)?)?;
-        output.replace(Some(session));
-        Ok(())
+/// Flush the logger of the current thread
+pub fn flush() {
+    OUTPUT.with(|output| {
+        output.replace(None);
     })
 }

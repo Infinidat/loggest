@@ -3,7 +3,7 @@ use loggest::init;
 use std::thread;
 
 fn main() {
-    init(LevelFilter::Info, "example").unwrap();
+    let _flush = init(LevelFilter::Info, "example").unwrap();
 
     info!("Main thread");
 
