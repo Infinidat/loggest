@@ -1,7 +1,10 @@
 [package]
 name = "loggestd"
 version = "0.1.0"
+description = "A daemon for high-performance logging"
 authors = ["Roey Darwish Dror"]
+repository = "https://github.com/drrlvn/loggest"
+license = "Apache-2.0"
 edition = "2018"
 
 [dependencies]
