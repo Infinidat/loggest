@@ -23,6 +23,6 @@ pub struct Opt {
 
     /// Address to listen to
     #[cfg(windows)]
-    #[structopt(long, default_value = "127.0.0.1:1337", env = "LOGGESTD_LISTEN")]
+    #[structopt(long, default_value = "127.0.0.1:1099", env = "LOGGESTD_LISTEN")]
     pub listen: SocketAddr,
 }

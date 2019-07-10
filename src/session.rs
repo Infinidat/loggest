@@ -24,7 +24,7 @@ impl Session<UnixStream> {
 #[cfg(windows)]
 impl Session<TcpStream> {
     pub fn connect() -> Result<Session<TcpStream>, io::Error> {
-        TcpStream::connect(env::var("LOGGESTD_SOCKET").unwrap_or_else(|_| "127.0.0.1:1337".into()))
+        TcpStream::connect(env::var("LOGGESTD_SOCKET").unwrap_or_else(|_| "127.0.0.1:1099".into()))
             .map(|transport| Session { transport })
     }
 }
