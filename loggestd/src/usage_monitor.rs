@@ -6,7 +6,7 @@ use std::fs::{self, DirEntry, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
 #[cfg(windows)]
-use std::ptr::null;
+use std::ptr::null_mut;
 use std::time::{Duration, Instant, SystemTime};
 use tokio::prelude::*;
 use tokio::timer::{Error as TimerError, Interval};
@@ -61,8 +61,9 @@ fn get_fs_data(directory: &Path) -> Result<SpaceData, io::Error> {
     let mut avail: ULARGE_INTEGER = Default::default();
     let mut total: ULARGE_INTEGER = Default::default();
 
-    if unsafe { fileapi::GetDiskFreeSpaceExW(wstr.as_ptr(), &mut avail as *mut _, &mut total as *mut _, null()) }
-        == FALSE
+    if unsafe {
+        fileapi::GetDiskFreeSpaceExW(wstr.as_ptr(), &mut avail as *mut _, &mut total as *mut _, null_mut())
+    } == FALSE
     {
         return Err(io::Error::new(
             io::ErrorKind::Other,
