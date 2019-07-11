@@ -5,6 +5,7 @@ use nix::sys::statvfs::{statvfs, Statvfs};
 use std::fs::{self, DirEntry, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::ptr::null;
 use std::time::{Duration, Instant, SystemTime};
 use tokio::prelude::*;
 use tokio::timer::{Error as TimerError, Interval};
@@ -58,17 +59,9 @@ fn get_fs_data(directory: &Path) -> Result<SpaceData, io::Error> {
 
     let mut avail: ULARGE_INTEGER = Default::default();
     let mut total: ULARGE_INTEGER = Default::default();
-    let mut free: ULARGE_INTEGER = Default::default();
 
-    if FALSE
-        == unsafe {
-            fileapi::GetDiskFreeSpaceExW(
-                wstr.as_ptr(),
-                &mut avail as *mut _,
-                &mut total as *mut _,
-                &mut free as *mut _,
-            )
-        }
+    if unsafe { fileapi::GetDiskFreeSpaceExW(wstr.as_ptr(), &mut avail as *mut _, &mut total as *mut _, null()) }
+        == FALSE
     {
         return Err(io::Error::new(
             io::ErrorKind::Other,
