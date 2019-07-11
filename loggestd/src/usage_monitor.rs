@@ -5,6 +5,7 @@ use nix::sys::statvfs::{statvfs, Statvfs};
 use std::fs::{self, DirEntry, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
+#[cfg(windows)]
 use std::ptr::null;
 use std::time::{Duration, Instant, SystemTime};
 use tokio::prelude::*;
