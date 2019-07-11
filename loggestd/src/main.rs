@@ -1,10 +1,16 @@
 use env_logger::{self, Env};
 use future::Future;
-use log::{debug, error, info};
+#[cfg(unix)]
+use log::debug;
+use log::{error, info};
+#[cfg(unix)]
 use std::fs;
 use std::sync::Arc;
 use structopt::StructOpt;
+#[cfg(unix)]
 use tokio::net::unix::UnixListener;
+#[cfg(windows)]
+use tokio::net::TcpListener;
 use tokio::prelude::*;
 use tokio::runtime::Runtime;
 
@@ -21,13 +27,24 @@ fn main() {
         .default_format_timestamp(false)
         .init();
 
-    if opt.unix_socket.exists() {
-        debug!("Deleting {}", opt.unix_socket.display());
-        fs::remove_file(&opt.unix_socket).unwrap();
-    }
+    #[cfg(unix)]
+    let socket = {
+        if opt.unix_socket.exists() {
+            debug!("Deleting {}", opt.unix_socket.display());
+            fs::remove_file(&opt.unix_socket).unwrap();
+        }
 
-    info!("Listening in {}", opt.unix_socket.display());
-    let socket = UnixListener::bind(&opt.unix_socket).unwrap().incoming();
+        info!("Listening in {}", opt.unix_socket.display());
+
+        UnixListener::bind(&opt.unix_socket).unwrap().incoming()
+    };
+
+    #[cfg(windows)]
+    let socket = {
+        info!("Listening in {}", opt.listen);
+        TcpListener::bind(&opt.listen).unwrap().incoming()
+    };
+
     info!("Logging to {}", opt.directory.display());
 
     let server = socket

@@ -17,6 +17,8 @@ use log::{set_logger, set_max_level, LevelFilter, Log, Metadata, Record};
 use std::io;
 use std::path::PathBuf;
 
+pub use output::flush;
+
 static LOGGER: Loggest = Loggest;
 static mut CONFIG: Option<Config> = None;
 
@@ -48,7 +50,7 @@ pub enum LoggestError {
 /// ```no_run
 /// loggest::init(log::LevelFilter::max(), "/var/log/my_app").unwrap();
 /// ```
-pub fn init<P>(level: LevelFilter, base_filename: P) -> Result<(), LoggestError>
+pub fn init<P>(level: LevelFilter, base_filename: P) -> Result<FlushGuard, LoggestError>
 where
     P: Into<PathBuf>,
 {
@@ -61,9 +63,7 @@ where
         CONFIG = Some(Config { level, base_filename });
     }
 
-    output::initialize_main_thread()?;
-
-    Ok(())
+    Ok(FlushGuard)
 }
 
 impl Log for Loggest {
@@ -80,4 +80,12 @@ impl Log for Loggest {
     }
 
     fn flush(&self) {}
+}
+
+pub struct FlushGuard;
+
+impl Drop for FlushGuard {
+    fn drop(&mut self) {
+        flush();
+    }
 }

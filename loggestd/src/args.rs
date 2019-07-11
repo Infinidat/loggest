@@ -1,3 +1,5 @@
+#[cfg(windows)]
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -10,6 +12,7 @@ pub struct Opt {
     pub directory: PathBuf,
 
     /// Unix socket to listen to
+    #[cfg(unix)]
     #[structopt(
         long,
         parse(from_os_str),
@@ -17,4 +20,9 @@ pub struct Opt {
         env = "LOGGESTD_SOCKET"
     )]
     pub unix_socket: PathBuf,
+
+    /// Address to listen to
+    #[cfg(windows)]
+    #[structopt(long, default_value = "127.0.0.1:1099", env = "LOGGESTD_LISTEN")]
+    pub listen: SocketAddr,
 }

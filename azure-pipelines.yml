@@ -8,6 +8,10 @@ strategy:
       imageName: 'ubuntu-16.04'
       rustup_toolchain: stable
       working_directory: .
+    win-stable-lib:
+      imageName: 'vs2017-win2016'
+      rustup_toolchain: stable
+      working_directory: .
 
     mac-stable-ioym:
       imageName: 'macos-10.13'
@@ -15,6 +19,10 @@ strategy:
       working_directory: ioym
     linux-stable-ioym:
       imageName: 'ubuntu-16.04'
+      rustup_toolchain: stable
+      working_directory: ioym
+    win-stable-ioym:
+      imageName: 'vs2017-win2016'
       rustup_toolchain: stable
       working_directory: ioym
 
@@ -26,7 +34,10 @@ strategy:
       imageName: 'ubuntu-16.04'
       rustup_toolchain: stable
       working_directory: loggestd
-
+    win-stable-loggestd:
+      imageName: 'vs2017-win2016'
+      rustup_toolchain: stable
+      working_directory: loggestd
 
 
 pool:

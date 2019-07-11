@@ -1,6 +1,9 @@
 use bytes::{BigEndian, ByteOrder};
 use std::env;
 use std::io::{self, Write};
+#[cfg(windows)]
+use std::net::TcpStream;
+#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 
 pub struct Session<T>
@@ -10,9 +13,18 @@ where
     transport: T,
 }
 
+#[cfg(unix)]
 impl Session<UnixStream> {
-    pub fn connect_unix() -> Result<Session<UnixStream>, io::Error> {
+    pub fn connect() -> Result<Session<UnixStream>, io::Error> {
         UnixStream::connect(env::var("LOGGESTD_SOCKET").unwrap_or_else(|_| "/run/loggestd.sock".into()))
+            .map(|transport| Session { transport })
+    }
+}
+
+#[cfg(windows)]
+impl Session<TcpStream> {
+    pub fn connect() -> Result<Session<TcpStream>, io::Error> {
+        TcpStream::connect(env::var("LOGGESTD_SOCKET").unwrap_or_else(|_| "127.0.0.1:1099".into()))
             .map(|transport| Session { transport })
     }
 }
