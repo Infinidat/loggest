@@ -14,8 +14,8 @@ mod session;
 use derive_more::From;
 use failure::Fail;
 use log::{set_logger, set_max_level, LevelFilter, Log, Metadata, Record};
+use std::ffi::OsString;
 use std::io;
-use std::path::PathBuf;
 
 pub use output::flush;
 
@@ -26,7 +26,7 @@ struct Loggest;
 
 struct Config {
     level: LevelFilter,
-    base_filename: PathBuf,
+    base_filename: OsString,
 }
 
 /// Error initializing `loggest`
@@ -48,13 +48,13 @@ pub enum LoggestError {
 ///
 /// # Example
 /// ```no_run
-/// loggest::init(log::LevelFilter::max(), "/var/log/my_app").unwrap();
+/// loggest::init(log::LevelFilter::max(), env!("CARGO_PKG_NAME")).unwrap();
 /// ```
 pub fn init<P>(level: LevelFilter, base_filename: P) -> Result<FlushGuard, LoggestError>
 where
-    P: Into<PathBuf>,
+    P: Into<OsString>,
 {
-    let base_filename = base_filename.into();
+    let base_filename: OsString = base_filename.into();
 
     set_logger(&LOGGER)?;
     set_max_level(level);

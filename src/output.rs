@@ -3,13 +3,12 @@ use crate::session;
 use crate::CONFIG;
 use log::Record;
 use std::cell::RefCell;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::io::Write;
 #[cfg(windows)]
 use std::net::TcpStream;
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
-use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 #[cfg(windows)]
 use winapi::um::processthreadsapi::GetCurrentThreadId;
@@ -40,12 +39,12 @@ fn get_thread_id() -> Option<usize> {
     return Some(unsafe { GetCurrentThreadId() } as usize);
 }
 
-fn get_thread_file(filename: &Path) -> PathBuf {
-    let mut os_string = OsString::from(filename.as_os_str());
+fn get_thread_file(filename: &OsStr) -> OsString {
+    let mut result = OsString::from(filename);
     if let Some(tid) = get_thread_id() {
-        os_string.push(format!(".{}", tid));
+        result.push(format!(".{}", tid));
     }
-    os_string.into()
+    result
 }
 
 pub fn log(record: &Record) {
