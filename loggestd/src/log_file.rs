@@ -37,11 +37,27 @@ fn ensure_directory(directory: &Path) -> Result<(), io::Error> {
     Ok(())
 }
 
+fn recursive_ensure_directory(directory: &Path) -> Result<(), io::Error> {
+    let result = ensure_directory(directory);
+
+    match result {
+        Ok(()) => Ok(()),
+        Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
+            recursive_ensure_directory(directory.parent().unwrap())?;
+            ensure_directory(directory)
+        }
+        Err(e) => Err(e),
+    }
+}
+
 impl LogFile {
     pub fn open(base_filename: PathBuf) -> Result<Self, io::Error> {
         let index = 1;
         let filename = generate_filename(&base_filename, index);
+
+        recursive_ensure_directory(filename.parent().unwrap())?;
         let file = File::create(&filename)?;
+
         info!("Opened {}", filename.display());
         Ok(LogFile {
             file,
