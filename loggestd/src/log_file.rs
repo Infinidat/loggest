@@ -37,11 +37,22 @@ fn ensure_directory(directory: &Path) -> Result<(), io::Error> {
     Ok(())
 }
 
+fn recursive_ensure_directory(directory: &Path) -> Result<(), io::Error> {
+    if let Some(parent) = directory.parent() {
+        recursive_ensure_directory(parent)?;
+    }
+
+    ensure_directory(directory)
+}
+
 impl LogFile {
     pub fn open(base_filename: PathBuf) -> Result<Self, io::Error> {
         let index = 1;
         let filename = generate_filename(&base_filename, index);
+
+        recursive_ensure_directory(filename.parent().unwrap())?;
         let file = File::create(&filename)?;
+
         info!("Opened {}", filename.display());
         Ok(LogFile {
             file,
