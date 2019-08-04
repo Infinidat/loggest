@@ -38,16 +38,11 @@ fn ensure_directory(directory: &Path) -> Result<(), io::Error> {
 }
 
 fn recursive_ensure_directory(directory: &Path) -> Result<(), io::Error> {
-    let result = ensure_directory(directory);
-
-    match result {
-        Ok(()) => Ok(()),
-        Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
-            recursive_ensure_directory(directory.parent().unwrap())?;
-            ensure_directory(directory)
-        }
-        Err(e) => Err(e),
+    if let Some(parent) = directory.parent() {
+        recursive_ensure_directory(parent)?;
     }
+
+    ensure_directory(directory)
 }
 
 impl LogFile {
