@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <Product Name='LoggestService' Id='*' UpgradeCode='62A40247-53B8-44F6-A004-E4C29447CE84'
+           Language='1033' Version='1.0.0' Manufacturer='Dror Levin'>
+    <Package Id='*' Compressed='yes' InstallScope='perMachine' Platform='x64' InstallerVersion='200' />
+    <Media Id='1' Cabinet='LoggestService.cab' EmbedCab='yes' />
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
+          <Directory Id='INSTALLDIR' Name='LoggestService'>
+            <Component Id='LoggestService' Guid='5C4B289F-290A-4F09-84D1-FCA35F6BBF3F' Win64='yes'>
+              <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="yes" Part="last" Action="set" System="yes" />
+              <File Id='LoggestD' Name='loggestd.exe' DiskId='1' Source='target\release\loggestd.exe'>
+              </File>
+              <ServiceInstall Id='LoggestServiceInstall' Type='ownProcess' Name='Loggest'
+                              DisplayName='Loggest Service' Description='Loggest Service'
+                              Start='auto' ErrorControl='normal' Arguments='--directory C:\logs' />
+              <ServiceControl Id="LoggestServiceStart" Start="install" Stop="both" Remove="uninstall" Name="Loggest" />
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+    <Feature Id='Complete'>
+      <ComponentRef Id='LoggestService' />
+    </Feature>
+  </Product>
+</Wix>

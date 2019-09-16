@@ -1,0 +1,56 @@
+name: CI
+
+on: push
+
+jobs:
+  format:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, macOS-latest, windows-latest]
+        directory: [., loggestd, ioym]
+
+    steps:
+      - uses: hecrj/setup-rust-action@master
+      - uses: actions/checkout@master
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+      - name: rustfmt
+        run: cargo fmt -- --check
+        working-directory: ${{ matrix.directory }}
+
+  lint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, macOS-latest, windows-latest]
+        directory: [., loggestd, ioym]
+
+    steps:
+      - uses: hecrj/setup-rust-action@master
+      - uses: actions/checkout@master
+      - name: Install clippy
+        run: rustup component add clippy rustfmt
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: ${{ matrix.directory }}
+
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, macOS-latest, windows-latest]
+        directory: [., loggestd, ioym]
+        exclude:
+          - os: windows-latest
+            directory: loggestd
+
+    steps:
+      - uses: hecrj/setup-rust-action@master
+      - uses: actions/checkout@master
+      - name: Cargo build
+        run: cargo build
+        working-directory: ${{ matrix.directory }}
+      - name: Cargo test
+        run: cargo test
+        working-directory: ${{ matrix.directory }}
