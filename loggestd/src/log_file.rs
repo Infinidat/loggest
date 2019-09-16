@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use log::{debug, info};
-use std::fs::{create_dir, rename, File};
+use std::fs::{create_dir_all, rename, File};
 use std::io;
 use std::path::{Path, PathBuf};
 use zstd::stream::copy_encode;
@@ -23,34 +23,12 @@ fn generate_filename(base_name: &Path, index: usize) -> PathBuf {
     path
 }
 
-fn ensure_directory(directory: &Path) -> Result<(), io::Error> {
-    let result = create_dir(directory);
-
-    match result {
-        Ok(()) => {
-            debug!("Created {}", directory.display());
-        }
-        Err(ref e) if e.kind() == io::ErrorKind::AlreadyExists => (),
-        Err(e) => return Err(e),
-    }
-
-    Ok(())
-}
-
-fn recursive_ensure_directory(directory: &Path) -> Result<(), io::Error> {
-    if let Some(parent) = directory.parent() {
-        recursive_ensure_directory(parent)?;
-    }
-
-    ensure_directory(directory)
-}
-
 impl LogFile {
     pub fn open(base_filename: PathBuf) -> Result<Self, io::Error> {
         let index = 1;
         let filename = generate_filename(&base_filename, index);
 
-        recursive_ensure_directory(filename.parent().unwrap())?;
+        create_dir_all(filename.parent().unwrap())?;
         let file = File::create(&filename)?;
 
         info!("Opened {}", filename.display());
@@ -64,7 +42,7 @@ impl LogFile {
 
     fn archive(filename: &Path) -> Result<(), io::Error> {
         let archive_directory = filename.parent().unwrap().join("archived");
-        ensure_directory(&archive_directory)?;
+        create_dir_all(&archive_directory)?;
 
         let archived_path = archive_directory.join(filename.file_name().unwrap());
 
