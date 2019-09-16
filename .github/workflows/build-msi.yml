@@ -2,8 +2,8 @@ name: Release MSI
 
 on:
   push:
-    paths:
-      - 'loggestd/*'
+    tags:
+      - 'loggestd-*'
 
 jobs:
   build-loggestd-msi:
@@ -29,7 +29,6 @@ jobs:
         working-directory: loggestd
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/') && contains(github.ref, 'loggestd')
         with:
           files: format('{0}.msi', GITHUB_REF)
         env:
