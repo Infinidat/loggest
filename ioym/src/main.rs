@@ -177,7 +177,7 @@ fn handle_file(filename: &Path, output: Output, is_utc: bool) -> IoymResult<()> 
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "ioym")]
+#[structopt(about)]
 /// Extracts and decodes loggest log files
 struct Opt {
     #[structopt(long, short = "c")]
@@ -188,7 +188,7 @@ struct Opt {
     /// Use UTC instead of local timezone
     utc: bool,
 
-    #[structopt(parse(from_os_str), raw(required = "true"))]
+    #[structopt(parse(from_os_str), required = true)]
     files: Vec<PathBuf>,
 }
 

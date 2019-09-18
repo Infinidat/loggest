@@ -3,9 +3,8 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-/// A basic example
 #[derive(StructOpt, Debug)]
-#[structopt(name = "basic")]
+#[structopt(about)]
 pub struct Opt {
     /// Output directory
     #[structopt(short, long, parse(from_os_str))]

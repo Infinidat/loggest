@@ -11,7 +11,7 @@ edition = "2018"
 derive_more = "0.15"
 failure = "0.1"
 log = { version = "0.4", features = ["std"] }
-nix = "0.14"
+nix = "0.15.0"
 bytes = "0.4.12"
 
 [target.'cfg(windows)'.dependencies]
