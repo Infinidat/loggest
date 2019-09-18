@@ -25,11 +25,11 @@ jobs:
         run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\candle.exe" "loggestd.wxs"'
         working-directory: loggestd
       - name: Link MSI
-        run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\light.exe" "loggestd.wixobj"'
+        run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\light.exe" "loggestd.wixobj" "-out" "%GITHUB_REF%.msi"'
         working-directory: loggestd
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: format('{0}.msi', GITHUB_REF)
+          files: ${{ format('{0}.msi', github.ref) }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
