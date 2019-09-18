@@ -58,7 +58,7 @@ fn run_loggest(stop_recv_option: CrossbeamReceiverOption) {
     let opt = Arc::new(args::Opt::from_args());
 
     env_logger::from_env(Env::default().default_filter_or("info"))
-        .default_format_timestamp(false)
+        .format_timestamp(None)
         .init();
 
     #[cfg(unix)]
