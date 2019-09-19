@@ -30,6 +30,6 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ format('{0}.msi', github.ref) }}
+          files: ${{ format('loggestd/{0}.msi', github.ref) }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
