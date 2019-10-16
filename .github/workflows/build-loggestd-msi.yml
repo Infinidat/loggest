@@ -1,0 +1,35 @@
+name: Release Loggestd MSI
+
+on:
+  push:
+    tags:
+      - 'loggestd-*'
+
+jobs:
+  build-loggestd-msi:
+    runs-on: windows-latest
+    steps:
+      - uses: hecrj/setup-rust-action@master
+      - uses: actions/checkout@master
+      - name: Cargo build
+        run: cargo build --release
+        working-directory: loggestd
+      - name: Cargo test
+        run: cargo test
+        working-directory: loggestd
+      - name: Download WiX
+        run: curl -LS https://github.com/wixtoolset/wix3/releases/download/wix3111rtm/wix311.exe > wix311.exe
+      - name: Install WiX
+        run: wix311.exe /install /quiet /norestart
+      - name: Prepare MSI file
+        run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\candle.exe" "loggestd.wxs"'
+        working-directory: loggestd
+      - name: Link MSI
+        run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\light.exe" "loggestd.wixobj" "-out" "%GITHUB_REF%.msi"'
+        working-directory: loggestd
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ format('loggestd/{0}.msi', github.ref) }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

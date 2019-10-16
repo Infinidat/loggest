@@ -82,7 +82,7 @@ impl<R: BufRead> Ioym<R> {
             match read_time(&mut self.input, self.offset.unwrap_or(*OFFSET)) {
                 Err(Error::Io(ref e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
                 Err(Error::InvalidTimestamp) => (),
-                Err(e) => Err(e)?,
+                Err(e) => return Err(e),
                 Ok(ts) => write!(
                     &mut output,
                     "{}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} ",
@@ -117,7 +117,7 @@ where
             let available = match r.fill_buf() {
                 Ok(n) => n,
                 Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
-                Err(e) => Err(e)?,
+                Err(e) => return Err(e.into()),
             };
             match memchr::memchr(delim, available) {
                 Some(i) => {
