@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <Product Name='Ioym' Id='*' UpgradeCode='F33F83B3-5EE1-43CF-A162-F6733D8C22E2'
+           Language='1033' Version='1.0.0' Manufacturer='Dror Levin'>
+    <Package Id='*' Compressed='yes' InstallScope='perMachine' Platform='x64' InstallerVersion='200' />
+    <Media Id='1' Cabinet='Ioym.cab' EmbedCab='yes' />
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
+          <Directory Id='INSTALLDIR' Name='Ioym'>
+            <Component Id='Ioym' Guid='18FFF25E-CA28-4BE1-BD2F-1DEBC86FF234' Win64='yes'>
+              <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="yes" Part="last" Action="set" System="yes" />
+              <File Id='Ioym' Name='ioym.exe' DiskId='1' Source='target\release\ioym.exe'>
+              </File>
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+    <Feature Id='Complete'>
+      <ComponentRef Id='Ioym' />
+    </Feature>
+  </Product>
+</Wix>
