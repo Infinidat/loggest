@@ -63,7 +63,7 @@ impl LogFile {
     }
 
     pub fn write(&mut self, data: &Bytes) -> Result<(), io::Error> {
-        copy_encode(data as &[u8], &self.file, COMPRESSION_LEVEL)?;;
+        copy_encode(data as &[u8], &self.file, COMPRESSION_LEVEL)?;
 
         self.consumed_data += data.len();
         if self.consumed_data >= ARCHIVE_THREASHOLD {
