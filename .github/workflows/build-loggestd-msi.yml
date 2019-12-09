@@ -18,13 +18,17 @@ jobs:
         run: cargo test
         working-directory: loggestd
       - name: Download WiX
-        run: curl.exe -LS https://github.com/wixtoolset/wix3/releases/download/wix3111rtm/wix311.exe -o .\wix311.exe
+        shell: cmd
+        run: curl.exe -LS https://github.com/wixtoolset/wix3/releases/download/wix3111rtm/wix311.exe > wix311.exe
       - name: Install WiX
-        run: .\wix311.exe /install /quiet /norestart
+        shell: cmd
+        run: wix311.exe /install /quiet /norestart
       - name: Prepare MSI file
+        shell: cmd
         run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\candle.exe" "loggestd.wxs"'
         working-directory: loggestd
       - name: Link MSI
+        shell: cmd
         run: '"%PROGRAMFILES(x86)%\WiX Toolset v3.11\bin\light.exe" "loggestd.wixobj" "-out" "%GITHUB_REF%.msi"'
         working-directory: loggestd
       - name: Release
