@@ -19,9 +19,17 @@ install -D -m 755 %{_sourcedir}/loggestd.service -t %{buildroot}%{_unitdir}
 systemctl enable %{name}.service
 systemctl start %{name}.service
 
+
 %preun
-systemctl disable %{name}.service
-systemctl stop %{name}.service
+touch /tmp/c
+if [ $1 -eq 0 ]; then
+    touch /tmp/a
+    systemctl disable %{name}.service
+    systemctl stop %{name}.service
+else
+    touch > /tmp/b
+fi
+
 
 %files
 %{_bindir}/*
