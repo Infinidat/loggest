@@ -20,8 +20,11 @@ systemctl enable %{name}.service
 systemctl start %{name}.service
 
 %preun
-systemctl disable %{name}.service
-systemctl stop %{name}.service
+if [ $1 -eq 0 ]; then
+    systemctl disable %{name}.service
+    systemctl stop %{name}.service
+fi
+
 
 %files
 %{_bindir}/*
