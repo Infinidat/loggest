@@ -1,0 +1,26 @@
+name: Release Ioym RPM
+
+on:
+  push:
+    tags:
+      - 'ioym-*'
+
+jobs:
+  build-ioym-rpm:
+    container:
+      image: registry.gitlab.com/infinidat/docker-rust-rpm
+      env:
+        VERSION: ${{ github.ref }}
+        TARGET: x86_64-unknown-linux-musl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Generate RPM File
+        run: rpmbuild -D "_VERSION ${VERSION#ioym-}" -D "_TARGET $TARGET" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba ioym.spec
+        working-directory: ioym
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: 'ioym/target/rpmbuild/RPMS/x86_64/*.rpm'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
