@@ -1,0 +1,26 @@
+name: Release Loggestd RPM
+
+on:
+  push:
+    tags:
+      - 'loggestd-*'
+
+jobs:
+  build-loggestd-rpm:
+    container:
+      image: registry.gitlab.com/infinidat/docker-rust-rpm
+      env:
+        VERSION: ${{ github.ref }}
+        TARGET: x86_64-unknown-linux-musl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Generate RPM File
+        run: rpmbuild -D "_VERSION ${VERSION#loggestd-}" -D "_TARGET $TARGET" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba loggestd.spec
+        working-directory: loggestd
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: 'loggestd/target/rpmbuild/RPMS/x86_64/*.rpm'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
