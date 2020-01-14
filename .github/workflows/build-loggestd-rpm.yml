@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Generate RPM File
-        run: rpmbuild -D "_VERSION ${VERSION#loggestd-}" -D "_TARGET $TARGET" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba loggestd.spec
+        run: rpmbuild -D "_VERSION ${VERSION#refs/tags/loggestd-}" -D "_TARGET $TARGET" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba loggestd.spec
         working-directory: loggestd
       - name: Release
         uses: softprops/action-gh-release@v1

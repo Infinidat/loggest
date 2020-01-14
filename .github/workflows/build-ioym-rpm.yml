@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Generate RPM File
-        run: rpmbuild -D "_VERSION ${VERSION#ioym-}" -D "_TARGET $TARGET" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba ioym.spec
+        run: rpmbuild -D "_VERSION ${VERSION#refs/tags/ioym-}" -D "_TARGET $TARGET" -D "_topdir $PWD/target/rpmbuild" -D "_sourcedir $PWD" -ba ioym.spec
         working-directory: ioym
       - name: Release
         uses: softprops/action-gh-release@v1
