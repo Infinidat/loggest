@@ -10,9 +10,9 @@ edition = "2018"
 [dependencies]
 bytes = "0.4.12"
 derive_more = "0.99.2"
-failure = "0.1.5"
 log = { version = "0.4.8", features = ["std"] }
 nix = "0.16.0"
+thiserror = "1.0.10"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3.8", features = ["processthreadsapi"] }

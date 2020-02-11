@@ -1,6 +1,5 @@
 use byteorder::{ReadBytesExt, LE};
 use chrono::prelude::*;
-use failure::Fail;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::ffi::OsStr;
@@ -10,6 +9,7 @@ use std::io::{self, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use structopt::StructOpt;
+use thiserror::Error;
 
 const EXT: &str = "ioym";
 
@@ -17,28 +17,28 @@ lazy_static! {
     static ref OFFSET: chrono::FixedOffset = Local::now().offset().fix();
 }
 
-#[derive(Fail, Debug)]
-enum Error {
-    #[fail(display = "I/O error: {}", _0)]
-    Io(#[cause] io::Error),
+#[derive(Error, Debug)]
+enum IoymError {
+    #[error("I/O error: `{0}`")]
+    Io(#[source] io::Error),
 
-    #[fail(display = "Unsupported file type for \"{}\"", _0)]
+    #[error("Unsupported file type for \"`{0}`\"")]
     UnsupportedFileType(String),
 
-    #[fail(display = "Outputting to standard output is not supported with multiple inputs")]
+    #[error("Outputting to standard output is not supported with multiple inputs")]
     StdoutForbidsMultipleInputs,
 
-    #[fail(display = "Line has invalid timestamp")]
+    #[error("Line has invalid timestamp")]
     InvalidTimestamp,
 }
 
-impl From<io::Error> for Error {
+impl From<io::Error> for IoymError {
     fn from(error: io::Error) -> Self {
-        Error::Io(error)
+        IoymError::Io(error)
     }
 }
 
-type IoymResult<T> = Result<T, Error>;
+type IoymResult<T> = Result<T, IoymError>;
 
 #[derive(Clone, Copy)]
 enum Output {
@@ -80,8 +80,8 @@ impl<R: BufRead> Ioym<R> {
 
         loop {
             match read_time(&mut self.input, self.offset.unwrap_or(*OFFSET)) {
-                Err(Error::Io(ref e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
-                Err(Error::InvalidTimestamp) => (),
+                Err(IoymError::Io(ref e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(IoymError::InvalidTimestamp) => (),
                 Err(e) => return Err(e),
                 Ok(ts) => write!(
                     &mut output,
@@ -142,13 +142,13 @@ fn read_time<R: BufRead>(input: &mut R, offset: chrono::FixedOffset) -> IoymResu
     let duration = Duration::from_millis(input.read_u64::<LE>()?);
     match offset.timestamp_opt(duration.as_secs() as i64, duration.subsec_nanos()) {
         chrono::offset::LocalResult::Single(timestamp) => Ok(timestamp),
-        _ => Err(Error::InvalidTimestamp),
+        _ => Err(IoymError::InvalidTimestamp),
     }
 }
 
 fn handle_file(filename: &Path, output: Output, is_utc: bool) -> IoymResult<()> {
     if filename.extension() != Some(OsStr::new(EXT)) {
-        return Err(Error::UnsupportedFileType(filename.to_string_lossy().to_string()));
+        return Err(IoymError::UnsupportedFileType(filename.to_string_lossy().to_string()));
     }
 
     let mut ioym = Ioym::with_reader(fs::File::open(filename)?)?;
@@ -196,7 +196,7 @@ fn run() -> IoymResult<()> {
     let opt = Opt::from_args();
 
     if opt.stdout && opt.files.len() > 1 {
-        return Err(Error::StdoutForbidsMultipleInputs);
+        return Err(IoymError::StdoutForbidsMultipleInputs);
     }
 
     opt.files
