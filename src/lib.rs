@@ -12,10 +12,10 @@ mod output;
 mod session;
 
 use derive_more::From;
-use failure::Fail;
 use log::{set_logger, set_max_level, LevelFilter, Log, Metadata, Record};
 use std::ffi::OsString;
 use std::io;
+use thiserror::Error;
 
 pub use output::flush;
 
@@ -30,15 +30,15 @@ struct Config {
 }
 
 /// Error initializing `loggest`
-#[derive(Debug, Fail, From)]
+#[derive(Debug, Error, From)]
 pub enum LoggestError {
-    #[fail(display = "I/O error: {}", _0)]
-    IoError(#[cause] io::Error),
+    #[error("I/O error: `{0}`")]
+    IoError(#[source] io::Error),
 
-    #[fail(display = "Set logger error: {}", _0)]
-    SetLoggerError(#[cause] log::SetLoggerError),
+    #[error("Set logger error: `{0}`")]
+    SetLoggerError(#[source] log::SetLoggerError),
 
-    #[fail(display = "File name must be a valid utf-8")]
+    #[error("File name must be a valid utf-8")]
     BadFileName,
 }
 
