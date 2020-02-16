@@ -3,7 +3,7 @@ name = "loggest"
 version = "0.2.2"
 description = "A high performance logging facility for Rust's log crate"
 authors = ["Dror Levin <spatz@psybear.com>"]
-repository = "https://github.com/drrlvn/loggest"
+repository = "https://github.com/Infinidat/loggest"
 license = "Apache-2.0"
 edition = "2018"
 
