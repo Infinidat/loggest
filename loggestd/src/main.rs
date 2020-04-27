@@ -1,5 +1,3 @@
-#[cfg(windows)]
-use crossbeam_channel;
 use env_logger::{self, Env};
 #[cfg(windows)]
 use futures::{future, Future};
@@ -20,8 +18,6 @@ use tokio::net::unix::UnixListener;
 use tokio::net::TcpListener;
 use tokio::prelude::*;
 use tokio::runtime::Runtime;
-#[cfg(windows)]
-use windows_service;
 #[cfg(windows)]
 use windows_service::service;
 #[cfg(windows)]
