@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use log::{debug, info};
+use log::info;
 use std::fs::{create_dir_all, rename, File};
 use std::io;
 use std::path::{Path, PathBuf};
