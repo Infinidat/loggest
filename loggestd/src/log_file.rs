@@ -46,7 +46,7 @@ impl LogFile {
 
         let archived_path = archive_directory.join(filename.file_name().unwrap());
 
-        debug!("{} -> {}", filename.display(), archived_path.display());
+        info!("Closed {}", filename.display());
         rename(&filename, &archived_path)
     }
 
