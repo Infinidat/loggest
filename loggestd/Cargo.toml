@@ -20,7 +20,7 @@ tokio-signal = "0.2.7"
 zstd = "0.5.1"
 
 [target.'cfg(windows)'.dependencies]
-crossbeam-channel = "0.3.9"
+crossbeam-channel = "0.4.4"
 winapi = { version = "0.3.8", features = ["impl-default"] }
 widestring = "0.4.0"
 windows-service = "0.2.0"
